@@ -1,4 +1,5 @@
 import 'package:app_firma_sabor/constants/api_constants.dart';
+import 'package:app_firma_sabor/screens/product_detail_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:app_firma_sabor/constants/app_theme.dart';
 import 'package:app_firma_sabor/services/home_service.dart';
@@ -44,7 +45,8 @@ class _HomeTabState extends State<HomeTab> {
   }
 
   // Cambia el estado del favorito y recarga la interfaz
-  void _toggleFavoriteStatus(int productId, List<dynamic> list, int index) async {
+  void _toggleFavoriteStatus(int productId, List<dynamic> list,
+      int index) async {
     try {
       // Optimistic UI: Cambiamos el color al instante para que se sienta rápido
       setState(() {
@@ -65,8 +67,9 @@ class _HomeTabState extends State<HomeTab> {
       setState(() {
         list[index]['is_favorite'] = !list[index]['is_favorite'];
       });
-      if(mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Error al actualizar favorito')));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Error al actualizar favorito')));
       }
     }
   }
@@ -74,7 +77,8 @@ class _HomeTabState extends State<HomeTab> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator(color: AppTheme.orangeBrand));
+      return const Center(
+          child: CircularProgressIndicator(color: AppTheme.orangeBrand));
     }
 
     return SingleChildScrollView(
@@ -99,7 +103,8 @@ class _HomeTabState extends State<HomeTab> {
                       ),
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       alignment: Alignment.centerLeft,
-                      child: const Text('Buscar algo rico...', style: TextStyle(color: Colors.grey, fontSize: 16)),
+                      child: const Text('Buscar algo rico...',
+                          style: TextStyle(color: Colors.grey, fontSize: 16)),
                     ),
                   ),
                 ),
@@ -129,7 +134,8 @@ class _HomeTabState extends State<HomeTab> {
                 children: _categories.map((category) {
                   return Padding(
                     padding: const EdgeInsets.only(right: 15),
-                    child: _buildCategoryChip(category['name'], Icons.category), // Usamos icono genérico por ahora
+                    child: _buildCategoryChip(category['name'],
+                        Icons.category), // Usamos icono genérico por ahora
                   );
                 }).toList(),
               ),
@@ -140,7 +146,8 @@ class _HomeTabState extends State<HomeTab> {
             _buildSectionHeader('Agregados recientemente'),
             const SizedBox(height: 15),
             if (_recentProducts.isEmpty)
-              const Text("No hay productos recientes.", style: TextStyle(color: Colors.grey))
+              const Text("No hay productos recientes.",
+                  style: TextStyle(color: Colors.grey))
             else
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
@@ -152,7 +159,9 @@ class _HomeTabState extends State<HomeTab> {
                       padding: const EdgeInsets.only(right: 20),
                       child: _buildProductCard(
                         product: product,
-                        onFavoriteTap: () => _toggleFavoriteStatus(product['product_id'], _recentProducts, index),
+                        onFavoriteTap: () =>
+                            _toggleFavoriteStatus(
+                                product['product_id'], _recentProducts, index),
                       ),
                     );
                   }),
@@ -175,7 +184,9 @@ class _HomeTabState extends State<HomeTab> {
                       padding: const EdgeInsets.only(right: 20),
                       child: _buildProductCard(
                         product: product,
-                        onFavoriteTap: () => _toggleFavoriteStatus(product['product_id'], _recentlyViewed, index),
+                        onFavoriteTap: () =>
+                            _toggleFavoriteStatus(
+                            product['product_id'], _recentlyViewed, index),
                       ),
                     );
                   }),
@@ -198,11 +209,15 @@ class _HomeTabState extends State<HomeTab> {
         children: [
           Text(
             title,
-            style: const TextStyle(color: AppTheme.orangeBrand, fontSize: 18, fontWeight: FontWeight.bold),
+            style: const TextStyle(color: AppTheme.orangeBrand,
+                fontSize: 18,
+                fontWeight: FontWeight.bold),
           ),
           const Text(
             'Ver todo',
-            style: TextStyle(color: AppTheme.orangeBrand, fontSize: 16, fontWeight: FontWeight.bold),
+            style: TextStyle(color: AppTheme.orangeBrand,
+                fontSize: 16,
+                fontWeight: FontWeight.bold),
           ),
         ],
       ),
@@ -221,7 +236,9 @@ class _HomeTabState extends State<HomeTab> {
         children: [
           Icon(icon, color: AppTheme.navyBlue, size: 20),
           const SizedBox(width: 8),
-          Text(label, style: const TextStyle(color: AppTheme.navyBlue, fontWeight: FontWeight.bold, fontSize: 16)),
+          Text(label, style: const TextStyle(color: AppTheme.navyBlue,
+              fontWeight: FontWeight.bold,
+              fontSize: 16)),
         ],
       ),
     );
@@ -230,128 +247,103 @@ class _HomeTabState extends State<HomeTab> {
   Widget _buildProductCard({required Map<String, dynamic> product, required VoidCallback onFavoriteTap}) {
     return Semantics(
       label: "Producto: ${product['name']}, Precio: ${product['price']}.",
+      // 1. EL TOQUE DE TODA LA TARJETA (Navega a los detalles)
       child: GestureDetector(
         onTap: () {
-          print(
-              "Navegar a los detalles del producto con ID: ${product['product_id']}");
-        },
-
-      child: Container(
-        width: 180,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 5))],
-        ),
-
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-/*            // IMAGEN
-            ClipRRect(
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(20),
-                topRight: Radius.circular(20),
-              ),
-              child: product['image_url'] != null
-                ? Image.network(
-                  '${ApiConstants.imagesUrl}/${product['image_url']}',
-                height: 120,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  //DEPURAR IMAGEN
-                  print('Error al cargar imagen: $error');
-
-                  return Container(
-                    height: 120,
-                    color: Colors.grey.shade200,
-                    child: const Icon(Icons.broken_image_outlined, color: Colors.grey, size: 40),
-                  );
-                },
-              )
-                  :Container(
-                height: 120,
-                color: Colors.grey.shade300,
-                child: const Center(child: Icon(Icons.image, color: Colors.white, size: 40)),
-              ),
-            ),*/
-            ClipRRect(
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(20),
-                topRight: Radius.circular(20),
-              ),
-              child: Image.network(
-                // Bypass temporal: Usamos una foto de internet mientras desarrollamos
-                'https://media.airedesantafe.com.ar/p/9ac096426bd44b6fe19d566ec41b5083/adjuntos/268/imagenes/003/771/0003771857/1200x0/smart/imagepng.png',
-                height: 120,
-                width: double.infinity,
-                fit: BoxFit.cover,
-              ),
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ProductDetailScreen(productId: product['product_id']),
             ),
+          );
+        },
+        child: Container(
+          width: 180,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 5))],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // IMAGEN
+              ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  topRight: Radius.circular(20),
+                ),
+                child: Image.network(
+                  // Bypass temporal
+                  'https://media.airedesantafe.com.ar/p/9ac096426bd44b6fe19d566ec41b5083/adjuntos/268/imagenes/003/771/0003771857/1200x0/smart/imagepng.png',
+                  height: 120,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                ),
+              ),
 
-
-            // INFO
-            Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    product['name'] ?? '',
-                    style: const TextStyle(color: AppTheme.navyBlue, fontWeight: FontWeight.bold, fontSize: 16),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          product['description'] ?? '',
-                          style: TextStyle(color: Colors.grey.shade600, fontSize: 10),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      // BOTÓN DE FAVORITO DINÁMICO
-                      Semantics(
-                        button: true,
-                        label: product['is_favorite'] == true ? "Quitar de favoritos" : "Añadir a favoritos",
-                        child: GestureDetector(
-                          onTap: onFavoriteTap,
-                          child: CircleAvatar(
-                            radius: 14,
-                            backgroundColor: AppTheme.navyBlue,
-                            child: Icon(
-                              Icons.bookmark,
-                              size: 16,
-                              color: product['is_favorite'] == true ? Colors.redAccent : AppTheme.backgroundLight,
-                            ),
+              // INFO
+              Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      product['name'] ?? '',
+                      style: const TextStyle(color: AppTheme.navyBlue, fontWeight: FontWeight.bold, fontSize: 16),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            product['description'] ?? '',
+                            style: TextStyle(color: Colors.grey.shade600, fontSize: 10),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                      )
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(product['price'] ?? '', style: const TextStyle(color: AppTheme.navyBlue, fontSize: 16)),
-                      Row(
-                        children: [
-                          const Icon(Icons.star, color: AppTheme.brandYellow, size: 16),
-                          Text(product['rating'] ?? '0.0', style: const TextStyle(color: Colors.grey, fontSize: 14)),
-                        ],
-                      ),
-                    ],
-                  ),
-                ],
+
+                        // 2. EL BOTÓN DE FAVORITOS (Ejecuta la función onFavoriteTap que guarda en la BD)
+                        Semantics(
+                          button: true,
+                          label: product['is_favorite'] == true ? "Quitar de favoritos" : "Añadir a favoritos",
+                          child: GestureDetector(
+                            onTap: onFavoriteTap, // <-- ESTO FALTABA
+                            child: CircleAvatar(
+                              radius: 14,
+                              backgroundColor: AppTheme.navyBlue,
+                              child: Icon(
+                                Icons.bookmark,
+                                size: 16,
+                                color: product['is_favorite'] == true ? Colors.redAccent : AppTheme.backgroundLight,
+                              ),
+                            ),
+                          ),
+                        )
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(product['price'] ?? '', style: const TextStyle(color: AppTheme.navyBlue, fontSize: 16)),
+                        Row(
+                          children: [
+                            const Icon(Icons.star, color: AppTheme.brandYellow, size: 16),
+                            Text(product['rating'] ?? '0.0', style: const TextStyle(color: Colors.grey, fontSize: 14)),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
       ),
     );
   }
