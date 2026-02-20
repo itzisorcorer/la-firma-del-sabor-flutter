@@ -19,6 +19,9 @@ class _HomeTabState extends State<HomeTab> {
   List<dynamic> _categories = [];
   List<dynamic> _recentProducts = [];
   List<dynamic> _recentlyViewed = [];
+
+  int? _selectedCategoryId;
+  bool _isFiltering = false;
   final TextEditingController _searchController = TextEditingController();
 
   @override
@@ -30,7 +33,7 @@ class _HomeTabState extends State<HomeTab> {
     });
   }
   @override
-  void disponse(){
+  void dispose(){
     _searchController.dispose();
     super.dispose();
   }
@@ -61,8 +64,7 @@ class _HomeTabState extends State<HomeTab> {
   }
 
   // Cambia el estado del favorito y recarga la interfaz
-  void _toggleFavoriteStatus(int productId, List<dynamic> list,
-      int index) async {
+  void _toggleFavoriteStatus(int productId, List<dynamic> list, int index) async {
     try {
       // Optimistic UI: Cambiamos el color al instante para que se sienta rápido
       setState(() {
@@ -88,6 +90,24 @@ class _HomeTabState extends State<HomeTab> {
             const SnackBar(content: Text('Error al actualizar favorito')));
       }
     }
+  }
+  //función del botón de los filtros
+  Future<void> _onCategorySelected(int? categoryId) async{
+    setState(() {
+      _selectedCategoryId = categoryId;
+      _isFiltering = true;
+    });
+    if(categoryId == null){
+      await _loadData();
+    }else{
+      final filteredProducts = await _homeService.fetchProductsByCategory(categoryId);
+      setState(() {
+        _recentProducts = filteredProducts;
+        _recentlyViewed = [];
+      });
+    }
+    setState(() => _isFiltering = false);
+
   }
 
   @override
@@ -178,16 +198,27 @@ class _HomeTabState extends State<HomeTab> {
               scrollDirection: Axis.horizontal,
               physics: const BouncingScrollPhysics(),
               child: Row(
-                children: _categories.map((category) {
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 15),
-                    child: _buildCategoryChip(category['name'],
-                        Icons.category), // Usamos icono genérico por ahora
-                  );
-                }).toList(),
+                children: [
+                  Padding(
+                      padding: const EdgeInsets.only(right: 15),
+                    child: _buildCategoryChip("Todos", Icons.dashboard_outlined, null),
+                  ),
+                  ..._categories.map((category) {
+                    return Padding(padding: const EdgeInsets.only(right: 15),
+                      child: _buildCategoryChip(category['name'], Icons.category, category['category_id']),
+                    );
+                  }).toList(),
+                ],
               ),
             ),
             const SizedBox(height: 30),
+
+            if(_isFiltering)
+              const Padding(
+                padding: EdgeInsets.all(40.0),
+                child: Center(child: CircularProgressIndicator(color: AppTheme.orangeBrand)),
+              )
+            else ...[
 
             // --- 3. SECCIÓN: AGREGADOS RECIENTEMENTE (Dinámicos) ---
             _buildSectionHeader('Agregados recientemente'),
@@ -240,8 +271,10 @@ class _HomeTabState extends State<HomeTab> {
                 ),
               ),
             ],
-            const SizedBox(height: 30),
           ],
+            const SizedBox(height: 30),
+
+        ],
         ),
       ),
     );
@@ -271,22 +304,33 @@ class _HomeTabState extends State<HomeTab> {
     );
   }
 
-  Widget _buildCategoryChip(String label, IconData icon) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF9F5F0),
-        borderRadius: BorderRadius.circular(25),
-        border: Border.all(color: Colors.grey.withOpacity(0.2)),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: AppTheme.navyBlue, size: 20),
-          const SizedBox(width: 8),
-          Text(label, style: const TextStyle(color: AppTheme.navyBlue,
-              fontWeight: FontWeight.bold,
-              fontSize: 16)),
-        ],
+  Widget _buildCategoryChip(String label, IconData icon, int? categoryId) {
+    // Si el ID de este botón es igual al que seleccionamos, se pinta de naranja
+    final isSelected = _selectedCategoryId == categoryId;
+
+    return GestureDetector(
+      onTap: () => _onCategorySelected(categoryId),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected ? AppTheme.orangeBrand : const Color(0xFFF9F5F0),
+          borderRadius: BorderRadius.circular(25),
+          border: Border.all(color: isSelected ? AppTheme.orangeBrand : Colors.grey.withOpacity(0.2)),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: isSelected ? Colors.white : AppTheme.navyBlue, size: 20),
+            const SizedBox(width: 8),
+            Text(
+                label,
+                style: TextStyle(
+                    color: isSelected ? Colors.white : AppTheme.navyBlue,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16
+                )
+            ),
+          ],
+        ),
       ),
     );
   }

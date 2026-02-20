@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:app_firma_sabor/constants/app_theme.dart';
 import 'package:app_firma_sabor/services/product_service.dart';
 import 'package:app_firma_sabor/services/home_service.dart'; // Importamos para el favorito
+import 'package:app_firma_sabor/services/cart_service.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final int productId;
@@ -218,7 +219,16 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                           elevation: 0,
                         ),
                         onPressed: () {
-                          print("Agregando $_quantity de ${_product!['name']} al carrito");
+                          //guarda el producto en el carrito
+                          CartService().addToCart(_product!, _quantity);
+                          //alerta de exito
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('¡Agregaste $_quantity ${_product!['name']} al carrito! 🛒'),
+                              backgroundColor: AppTheme.orangeBrand,
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
                         },
                         child: const Text(
                           "Agregar al carrito",
@@ -263,7 +273,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               top: 295, // Costura
               right: 30,
               child: GestureDetector(
-                onTap: _toggleFavorite, // ¡AHORA SÍ FUNCIONA!
+                onTap: _toggleFavorite,
                 child: CircleAvatar(
                   radius: 25,
                   backgroundColor: AppTheme.navyBlue,

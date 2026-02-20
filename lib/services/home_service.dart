@@ -58,4 +58,26 @@ Future<bool> toggleFavorite(int productId) async{
     throw e;
   }
   }
+
+  //funcion para ovtener producto por categoria
+Future <List<dynamic>> fetchProductsByCategory(int categoryId) async{
+  final token = await _authService.getToken();
+  final url = Uri.parse('${ApiConstants.baseUrl}/categories/$categoryId/products');
+
+  try{
+    final response = await http.get(url, headers: {
+      'Accept' : 'application/json',
+      'Authorization' : 'Bearer $token',
+    });
+    if(response.statusCode == 200){
+      final data = jsonDecode(response.body);
+      return data['data'] ?? [];
+    }
+    return[];
+    }catch(e){
+      print('Error al filtrar por categoria: $e');
+      return[];
+  }
+
+  }
 }

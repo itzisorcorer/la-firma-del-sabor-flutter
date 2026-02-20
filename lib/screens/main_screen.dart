@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:app_firma_sabor/constants/app_theme.dart';
-// Importaremos el contenido de Inicio en el siguiente paso
 import 'package:app_firma_sabor/screens/home_tab.dart';
+import 'package:app_firma_sabor/screens/cart_screen.dart';
+import 'package:app_firma_sabor/services/cart_service.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -11,45 +12,42 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-  int _currentIndex = 0; // Controla qué pestaña está activa
+  int _currentIndex = 0;
 
-  // Lista de las pantallas que irán en el centro
+  // 1. Aquí metemos la pantalla real del carrito
   final List<Widget> _pages = [
-    const HomeTab(), // Índice 0: Inicio
-    const Center(child: Text('Carrito en construcción 🛒')), // Índice 1: Carrito
-    const Center(child: Text('Mis Pedidos en construcción 🛍️')), // Índice 2: Bolsa
+    const HomeTab(),
+    const CartScreen(), // ¡Nuestra pestaña real!
+    const Center(child: Text('Mis Pedidos en construcción 🛍️')),
   ];
+
+  // 2. Títulos dinámicos para el AppBar superior
+  final List<String> _titles = ['Inicio', 'Mi Carrito', 'Mis Pedidos'];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.backgroundLight,
 
-      // --- BARRA SUPERIOR AMARILLA ---
       appBar: AppBar(
         backgroundColor: AppTheme.brandYellow,
         elevation: 0,
-        // Menú hamburguesa a la izquierda
         leading: Semantics(
           label: "Menú principal",
           child: IconButton(
             icon: const Icon(Icons.menu, color: AppTheme.navyBlue, size: 30),
-            onPressed: () {
-              // TODO: Abrir Drawer
-            },
+            onPressed: () {},
           ),
         ),
-        // Título centrado
+        // Aquí le decimos que cambie el título según la pestaña
         title: Text(
-          'Inicio',
+          _titles[_currentIndex],
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
             color: AppTheme.navyBlue,
             fontWeight: FontWeight.bold,
           ),
         ),
-        centerTitle: false, // En el mockup está a la izquierda del centro
-
-        // Icono de perfil a la derecha
+        centerTitle: false,
         actions: [
           Semantics(
             label: "Mi perfil",
@@ -58,26 +56,24 @@ class _MainScreenState extends State<MainScreen> {
               onPressed: () {},
             ),
           ),
-          const SizedBox(width: 10), // Espacio al borde
+          const SizedBox(width: 10),
         ],
       ),
 
-      // --- EL CONTENIDO CAMBIANTE ---
       body: _pages[_currentIndex],
 
-      // --- BARRA INFERIOR AMARILLA ---
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: AppTheme.brandYellow,
         currentIndex: _currentIndex,
-        selectedItemColor: AppTheme.navyBlue, // Azul oscuro cuando está activo
-        unselectedItemColor: AppTheme.navyBlue.withOpacity(0.5), // Medio transparente inactivo
-        showSelectedLabels: false, // El mockup no tiene textos abajo
+        selectedItemColor: AppTheme.navyBlue,
+        unselectedItemColor: AppTheme.navyBlue.withOpacity(0.5),
+        showSelectedLabels: false,
         showUnselectedLabels: false,
         iconSize: 32,
         type: BottomNavigationBarType.fixed,
         onTap: (index) {
           setState(() {
-            _currentIndex = index;
+            _currentIndex = index; // Cambio de pestaña natural
           });
         },
         items: [
@@ -86,7 +82,18 @@ class _MainScreenState extends State<MainScreen> {
             label: 'Inicio',
           ),
           BottomNavigationBarItem(
-            icon: Semantics(label: "Pestaña Carrito", child: Icon(Icons.shopping_cart_outlined)),
+            icon: Semantics(
+              label: "Pestaña Carrito",
+              child: Badge(
+                isLabelVisible: CartService().totalItems > 0,
+                label: Text(
+                  CartService().totalItems.toString(),
+                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                ),
+                backgroundColor: Colors.redAccent,
+                child: const Icon(Icons.shopping_cart_outlined),
+              ),
+            ),
             label: 'Carrito',
           ),
           BottomNavigationBarItem(
