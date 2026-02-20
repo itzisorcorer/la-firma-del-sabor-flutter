@@ -1,5 +1,6 @@
 import 'package:app_firma_sabor/constants/api_constants.dart';
 import 'package:app_firma_sabor/screens/product_detail_screen.dart';
+import 'package:app_firma_sabor/screens/search_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:app_firma_sabor/constants/app_theme.dart';
 import 'package:app_firma_sabor/services/home_service.dart';
@@ -18,6 +19,7 @@ class _HomeTabState extends State<HomeTab> {
   List<dynamic> _categories = [];
   List<dynamic> _recentProducts = [];
   List<dynamic> _recentlyViewed = [];
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -25,6 +27,11 @@ class _HomeTabState extends State<HomeTab> {
     _loadData();
   }
 
+  void _ejecutarBusqueda(String query) {
+    print("Buscando en Laravel: $query");
+
+    Navigator.push(context, MaterialPageRoute(builder: (context) => SearchScreen(query: query)));
+  }
   // Carga los datos desde Laravel
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
@@ -89,22 +96,32 @@ class _HomeTabState extends State<HomeTab> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // --- 1. BARRA DE BÚSQUEDA ---
+// --- 1. BARRA DE BÚSQUEDA ---
             Row(
               children: [
                 Expanded(
-                  child: Semantics(
-                    label: "Buscar productos",
-                    textField: true,
-                    child: Container(
-                      height: 50,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF2ECE4),
-                        borderRadius: BorderRadius.circular(25),
+                  child: Container(
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF2ECE4),
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    alignment: Alignment.centerLeft,
+                    // CAMBIO AQUÍ: ¡Ahora es un campo de texto de verdad!
+                    child: TextField(
+                      controller: _searchController,
+                      decoration: const InputDecoration(
+                        hintText: 'Buscar algo rico...',
+                        hintStyle: TextStyle(color: Colors.grey, fontSize: 16),
+                        border: InputBorder.none,
                       ),
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      alignment: Alignment.centerLeft,
-                      child: const Text('Buscar algo rico...',
-                          style: TextStyle(color: Colors.grey, fontSize: 16)),
+                      onSubmitted: (value) {
+                        // Si presionan Enter en el teclado, también busca
+                        if (value.trim().isNotEmpty) {
+                          _ejecutarBusqueda(value.trim());
+                        }
+                      },
                     ),
                   ),
                 ),
@@ -112,14 +129,22 @@ class _HomeTabState extends State<HomeTab> {
                 Semantics(
                   button: true,
                   label: "Ejecutar búsqueda",
-                  child: Container(
-                    height: 50,
-                    width: 50,
-                    decoration: BoxDecoration(
-                      color: AppTheme.orangeBrand,
-                      borderRadius: BorderRadius.circular(15),
+                  child: GestureDetector(
+                    onTap: () {
+                      // Al tocar el botón naranja
+                      if (_searchController.text.trim().isNotEmpty) {
+                        _ejecutarBusqueda(_searchController.text.trim());
+                      }
+                    },
+                    child: Container(
+                      height: 50,
+                      width: 50,
+                      decoration: BoxDecoration(
+                        color: AppTheme.orangeBrand,
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      child: const Icon(Icons.search, color: Colors.white),
                     ),
-                    child: const Icon(Icons.search, color: Colors.white),
                   ),
                 ),
               ],

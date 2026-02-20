@@ -33,4 +33,26 @@ class ProductService {
       return null;
     }
   }
+  //FUNCIÓN DEL BUSCADOR:
+  Future<List<dynamic>> searchProducts(String query) async {
+    final token = await _authService.getToken();
+    // Armamos la URL con el texto de búsqueda
+    final url = Uri.parse('${ApiConstants.baseUrl}/search?q=$query');
+
+    try {
+      final response = await http.get(url, headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      });
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['data'] ?? [];
+      }
+      return [];
+    } catch (e) {
+      print('Error en búsqueda: $e');
+      return [];
+    }
+  }
 }
