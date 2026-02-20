@@ -25,7 +25,16 @@ class _HomeTabState extends State<HomeTab> {
   void initState() {
     super.initState();
     _loadData();
+    _searchController.addListener((){
+      setState(() {});
+    });
   }
+  @override
+  void disponse(){
+    _searchController.dispose();
+    super.dispose();
+  }
+
 
   void _ejecutarBusqueda(String query) {
     print("Buscando en Laravel: $query");
@@ -96,58 +105,71 @@ class _HomeTabState extends State<HomeTab> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // --- 1. BARRA DE BÚSQUEDA ---
-// --- 1. BARRA DE BÚSQUEDA ---
-            Row(
-              children: [
-                Expanded(
-                  child: Container(
-                    height: 50,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF2ECE4),
-                      borderRadius: BorderRadius.circular(25),
+            Semantics(
+              label: "Buscar productos",
+              textField: true,
+              child: Container(
+                decoration: BoxDecoration(
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 15,
+                      offset: const Offset(0, 5),
                     ),
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    alignment: Alignment.centerLeft,
-                    // CAMBIO AQUÍ: ¡Ahora es un campo de texto de verdad!
-                    child: TextField(
-                      controller: _searchController,
-                      decoration: const InputDecoration(
-                        hintText: 'Buscar algo rico...',
-                        hintStyle: TextStyle(color: Colors.grey, fontSize: 16),
-                        border: InputBorder.none,
-                      ),
-                      onSubmitted: (value) {
-                        // Si presionan Enter en el teclado, también busca
-                        if (value.trim().isNotEmpty) {
-                          _ejecutarBusqueda(value.trim());
-                        }
+                  ],
+                ),
+                child: TextField(
+                  controller: _searchController,
+                  // Cuando le dan "Enter" o la lupa del teclado
+                  onSubmitted: (value) {
+                    if (value.trim().isNotEmpty) {
+                      _ejecutarBusqueda(value.trim());
+                    }
+                    // Opcional: cerrar el teclado y limpiar
+                    // FocusScope.of(context).unfocus();
+                    // _searchController.clear();
+                  },
+                  style: const TextStyle(color: AppTheme.navyBlue, fontWeight: FontWeight.w600),
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor: Colors.white, // Fondo blanco puro para que resalte
+                    hintText: '¿Qué se te antoja hoy?', // Un texto más antojable
+                    hintStyle: TextStyle(color: Colors.grey.shade400, fontWeight: FontWeight.normal),
+
+                    // ÍCONO DE LUPA A LA IZQUIERDA (Color Naranja)
+                    prefixIcon: const Padding(
+                      padding: EdgeInsets.only(left: 15, right: 10),
+                      child: Icon(Icons.search_rounded, color: AppTheme.orangeBrand, size: 28),
+                    ),
+
+                    // ÍCONO DE "CERRAR" A LA DERECHA (Solo aparece si hay texto)
+                    suffixIcon: _searchController.text.isNotEmpty
+                        ? IconButton(
+                      icon: const Icon(Icons.close_rounded, color: Colors.grey),
+                      onPressed: () {
+                        _searchController.clear();
+                        // setState(() {}); // El listener del initState ya hace esto
                       },
+                    )
+                        : null,
+
+                    // Bordes redondeados y sin línea inferior
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(30),
+                      borderSide: BorderSide.none,
                     ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(30),
+                      borderSide: BorderSide.none,
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(30),
+                      borderSide: const BorderSide(color: AppTheme.orangeBrand, width: 1.5),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 15),
                   ),
                 ),
-                const SizedBox(width: 10),
-                Semantics(
-                  button: true,
-                  label: "Ejecutar búsqueda",
-                  child: GestureDetector(
-                    onTap: () {
-                      // Al tocar el botón naranja
-                      if (_searchController.text.trim().isNotEmpty) {
-                        _ejecutarBusqueda(_searchController.text.trim());
-                      }
-                    },
-                    child: Container(
-                      height: 50,
-                      width: 50,
-                      decoration: BoxDecoration(
-                        color: AppTheme.orangeBrand,
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      child: const Icon(Icons.search, color: Colors.white),
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
             const SizedBox(height: 30),
 
