@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:app_firma_sabor/constants/app_theme.dart';
 import 'package:app_firma_sabor/services/product_service.dart';
-import 'package:app_firma_sabor/services/home_service.dart'; // Importamos para el favorito
+import 'package:app_firma_sabor/services/home_service.dart';
 import 'package:app_firma_sabor/services/cart_service.dart';
+import 'package:app_firma_sabor/screens/creator_profile_screen.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final int productId;
@@ -242,28 +243,50 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               ),
             ),
 
-            // --- 3. BOTONES FLOTANTES (Posicionados exactamente en la costura) ---
+            // --- 3. BOTONES FLOTANTES ---
 
-            // Botón ¡Conoce a [Creador]!
+            // Botón Conoce a [Creador]
             Positioned(
-              top: 300, // Justo en medio de la costura (320 - 20)
+              top: 300,
               left: 20,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
-                decoration: BoxDecoration(
-                  color: AppTheme.brandYellow,
-                  borderRadius: BorderRadius.circular(25),
-                  border: Border.all(color: AppTheme.navyBlue, width: 2),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.person_outline, color: AppTheme.navyBlue, size: 22),
-                    const SizedBox(width: 8),
-                    Text(
-                      '¡Conoce a $creatorName!',
-                      style: const TextStyle(color: AppTheme.navyBlue, fontWeight: FontWeight.bold, fontSize: 16),
+              child: GestureDetector(
+                onTap: () {
+                  // Navegamos a la pantalla del perfil del creador
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => CreatorProfileScreen(
+                        // Ojo: Asegúrate de pasar el ID real si lo tienes a la mano en esta pantalla
+                        creatorId: _product!['creator_id'],
+                        creatorName: creatorName,
+                      ),
                     ),
-                  ],
+                  );
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: AppTheme.brandYellow,
+                    borderRadius: BorderRadius.circular(25),
+                    border: Border.all(color: AppTheme.navyBlue, width: 2),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.15),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.person_outline, color: AppTheme.navyBlue, size: 22),
+                      const SizedBox(width: 8),
+                      Text(
+                        '¡Conoce a $creatorName!',
+                        style: const TextStyle(color: AppTheme.navyBlue, fontWeight: FontWeight.bold, fontSize: 16),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),

@@ -3,6 +3,7 @@ import 'package:app_firma_sabor/constants/app_theme.dart';
 import 'package:app_firma_sabor/screens/home_tab.dart';
 import 'package:app_firma_sabor/screens/cart_screen.dart';
 import 'package:app_firma_sabor/services/cart_service.dart';
+import 'package:app_firma_sabor/screens/orders_tab.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -18,7 +19,7 @@ class _MainScreenState extends State<MainScreen> {
   final List<Widget> _pages = [
     const HomeTab(),
     const CartScreen(), // ¡Nuestra pestaña real!
-    const Center(child: Text('Mis Pedidos en construcción 🛍️')),
+    const OrdersTab(),
   ];
 
   // 2. Títulos dinámicos para el AppBar superior
