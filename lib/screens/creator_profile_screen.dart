@@ -237,7 +237,7 @@ class _CreatorProfileScreenState extends State<CreatorProfileScreen> {
       child: Container(
         width: 160,
         decoration: BoxDecoration(
-          color: Colors.white, // La tarjeta se queda blanca para resaltar sobre el hueso
+          color: Colors.white, //color huesito
           borderRadius: BorderRadius.circular(20),
           boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 5))],
         ),

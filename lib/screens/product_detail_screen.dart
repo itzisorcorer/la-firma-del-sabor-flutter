@@ -4,6 +4,7 @@ import 'package:app_firma_sabor/services/product_service.dart';
 import 'package:app_firma_sabor/services/home_service.dart';
 import 'package:app_firma_sabor/services/cart_service.dart';
 import 'package:app_firma_sabor/screens/creator_profile_screen.dart';
+import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final int productId;
@@ -192,20 +193,40 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     ),
                     const SizedBox(height: 15),
 
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      physics: const BouncingScrollPhysics(),
-                      child: Row(
-                        children: [
-                          _buildVideoLink(),
-                          const SizedBox(width: 15),
-                          _buildVideoLink(),
-                          const SizedBox(width: 15),
-                          _buildVideoLink(),
-                          const SizedBox(width: 15),
-                          _buildVideoLink(), // Puedes agregar más y se deslizarán
-                        ],
-                      ),
+                    // LÓGICA DE VIDEOS (CORREGIDA)
+                    Builder(
+                        builder: (context) {
+                          final List<dynamic> videos = _product!['videos'] ?? [];
+
+                          if (videos.isEmpty) {
+                            // Si no hay videos, se muestra este texto
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 20.0),
+                              child: Row(
+                                children: [
+                                  Icon(Icons.movie_creation_outlined, color: Colors.grey.shade400),
+                                  const SizedBox(width: 10),
+                                  const Text(
+                                    "Videos sobre este producto en camino...",
+                                    style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic, fontSize: 16),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }
+
+                          // Si hay videos, armamos el carrusel horizontal
+                          return SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            physics: const BouncingScrollPhysics(),
+                            child: Row(
+                              children: videos.map((video) {
+                                return VideoPlayerItem(videoUrl: video['url_youtube'],
+                                    accessibilityDescription: video['accessibility_description'] ?? 'Video ilustrativo del producto');
+                              }).toList(),
+                            ),
+                          );
+                        }
                     ),
                     const SizedBox(height: 40),
 
@@ -256,7 +277,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     context,
                     MaterialPageRoute(
                       builder: (context) => CreatorProfileScreen(
-                        // Ojo: Asegúrate de pasar el ID real si lo tienes a la mano en esta pantalla
                         creatorId: _product!['creator_id'],
                         creatorName: creatorName,
                       ),
@@ -344,22 +364,112 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       ),
     );
   }
+}
 
-  Widget _buildVideoLink() {
-    return Column(
-      children: [
-        const Text("video", style: TextStyle(color: AppTheme.navyBlue, fontSize: 14)),
-        const SizedBox(height: 5),
-        Container(
-          padding: const EdgeInsets.all(15),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.grey.withOpacity(0.2)),
-          ),
-          child: const Icon(Icons.link, color: Colors.blue, size: 30),
+
+// --- WIDGET REPRODUCTOR DE VIDEO ---
+class VideoPlayerItem extends StatefulWidget {
+  final String videoUrl;
+  final String accessibilityDescription; // 👈 NUEVA VARIABLE
+
+  const VideoPlayerItem({
+    super.key,
+    required this.videoUrl,
+    required this.accessibilityDescription, // 👈 LA PEDIMOS AQUÍ
+  });
+
+  @override
+  State<VideoPlayerItem> createState() => _VideoPlayerItemState();
+}
+
+class _VideoPlayerItemState extends State<VideoPlayerItem> {
+  late YoutubePlayerController _controller;
+  bool _isError = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final videoId = YoutubePlayer.convertUrlToId(widget.videoUrl);
+
+    if (videoId != null) {
+      _controller = YoutubePlayerController(
+        initialVideoId: videoId,
+        flags: const YoutubePlayerFlags(
+          autoPlay: false,
+          mute: false,
+          hideControls: false,
         ),
-      ],
+      );
+    } else {
+      _isError = true;
+    }
+  }
+
+  @override
+  void dispose() {
+    if (!_isError) _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isError) return const SizedBox.shrink();
+
+    // Envolvemos el video y el texto en un contenedor con ancho fijo (280)
+    return Container(
+      width: 280,
+      margin: const EdgeInsets.only(right: 15),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 1. EL REPRODUCTOR DE VIDEO
+          Container(
+            height: 160,
+            width: double.infinity,
+            clipBehavior: Clip.antiAlias,
+            decoration: BoxDecoration(
+              color: Colors.black,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 8, offset: const Offset(0, 4))
+              ],
+            ),
+            child: YoutubePlayer(
+              controller: _controller,
+              showVideoProgressIndicator: true,
+              progressIndicatorColor: AppTheme.orangeBrand,
+              progressColors: const ProgressBarColors(
+                playedColor: AppTheme.orangeBrand,
+                handleColor: AppTheme.brandYellow,
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 10), // Espacio entre el video y el texto
+
+          // 2. EL TEXTO DE ACCESIBILIDAD
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(Icons.closed_caption_outlined, size: 18, color: AppTheme.navyBlue),
+              const SizedBox(width: 5),
+              Expanded(
+                child: Text(
+                  widget.accessibilityDescription,
+                  style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.grey.shade700,
+                      fontStyle: FontStyle.italic,
+                      height: 1.3
+                  ),
+                  maxLines: 7, // Si el texto es muy largo, ponemos puntos suspensivos
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
