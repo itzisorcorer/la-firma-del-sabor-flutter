@@ -57,7 +57,7 @@ class _SplashScreenState extends State<SplashScreen> {
       if (role == 'gestor') {
         Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const GestorMainScreen()));
       } else if(role == 'admin'){
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const admin_main_screen()));
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const AdminMainScreen()));
       }else {
         Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const MainScreen()));
       }

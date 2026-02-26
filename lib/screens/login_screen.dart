@@ -48,7 +48,7 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       } else if (role == 'admin') {
         //al panel de admin
-        Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => const admin_main_screen()), (route) => false,
+        Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => const AdminMainScreen()), (route) => false,
         );
 
       }else{
