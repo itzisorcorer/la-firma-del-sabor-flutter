@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:app_firma_sabor/services/auth_service.dart';
 import 'package:app_firma_sabor/widgets/custom_input.dart';
 import 'package:app_firma_sabor/screens/register_screen.dart';
+import 'package:app_firma_sabor/screens/gestor/gestor_main_screen.dart';
+import 'package:app_firma_sabor/screens/admin/admin_main_screen.dart';
 
 import 'main_screen.dart';
 
@@ -19,24 +21,45 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
 
   void _doLogin() async {
-
     setState(() => _isLoading = true);
+
     final result = await _authService.login(
       _emailController.text.trim(),
       _passController.text.trim(),
     );
-    setState(() => _isLoading = false);
+
     if (!mounted) return;
+    setState(() => _isLoading = false);
+
     if (result['success']) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('¡Bienvenido!')),
       );
-      // Navegar al Home
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => const MainScreen()),
-            (route) => false,
-      );
+
+
+      final String role = result['user']['role'] ?? 'comprador';
+
+      if (role == 'gestor') {
+        // Al panel de Gestor
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const GestorMainScreen()),
+              (route) => false,
+        );
+      } else if (role == 'admin') {
+        //al panel de admin
+        Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => const admin_main_screen()), (route) => false,
+        );
+
+      }else{
+        //al home de comprador
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const MainScreen()),
+              (route) => false,
+        );
+
+      }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

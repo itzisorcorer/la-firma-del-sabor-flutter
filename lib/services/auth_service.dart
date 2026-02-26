@@ -19,7 +19,8 @@ class AuthService {
 
       if (response.statusCode == 200) {
         // login exitoso = guardar el token
-        await _saveToken(body['access_token']);
+        final String role = body['user']['role'] ?? 'comprador';
+        await _saveAuthData(body['access_token'], role);
         return {'success': true, 'user': body['user']};
       } else {
         // Error
@@ -30,20 +31,26 @@ class AuthService {
     }
   }
 
-  // Guardar token en memoria segura del teléfono
-  Future<void> _saveToken(String token) async {
+  // Guardar token y rol en memoria segura del teléfono
+  Future<void> _saveAuthData(String token, String role) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('auth_token', token);
+    await prefs.setString('role', role);
   }
   Future<String?> getToken() async{
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('auth_token');
+  }
+  Future<String?> getRole() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('role');
   }
 
   // Cerrar sesión (Borrar token)
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('auth_token');
+    await prefs.remove('role');
   }
 
   //Función para que el usuario se registre
@@ -66,7 +73,8 @@ class AuthService {
 
       if(response.statusCode == 201 || response.statusCode == 200){
         if(body.containsKey('access_token')){
-          await _saveToken(body['access_token']);
+          await _saveAuthData(body['access_token'], 'comprador');
+
         }
         return {'success' : true, 'message': 'Usuario creado correctamente'};
       }else{
