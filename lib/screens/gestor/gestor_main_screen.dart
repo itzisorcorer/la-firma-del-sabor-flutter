@@ -3,6 +3,7 @@ import 'package:app_firma_sabor/constants/app_theme.dart';
 import 'package:app_firma_sabor/services/auth_service.dart';
 import 'package:app_firma_sabor/screens/login_screen.dart';
 import 'package:app_firma_sabor/screens/gestor/gestor_orders_tab.dart';
+import 'package:app_firma_sabor/screens/gestor/gestor_assign_tab.dart';
 
 class GestorMainScreen extends StatefulWidget {
   const GestorMainScreen({super.key});
@@ -20,132 +21,149 @@ class _GestorMainScreenState extends State<GestorMainScreen> {
     const Center(child: Text("Pantalla de Configuración/Perfil", style: TextStyle(fontSize: 20))),
   ];
 
-  // Títulos para el AppBar
-  final List<String> _titles = ['Pedidos por procesar', 'Mi Perfil'];
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF9F5F0), // El fondo hueso del mockup
+    return DefaultTabController(
+      length: 2,
 
-      // 👇 1. AGREGAMOS EL APPBAR AMARILLO
-      appBar: AppBar(
-        backgroundColor: AppTheme.brandYellow,
-        elevation: 0,
-        title: Text(
-          _titles[_currentIndex],
-          style: const TextStyle(
-            color: AppTheme.navyBlue,
-            fontWeight: FontWeight.bold,
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF9F5F0), // El fondo hueso del mockup
+
+        // 1. EL APPBAR
+        appBar: AppBar(
+          backgroundColor: AppTheme.brandYellow,
+          elevation: 0,
+          title: Text(
+            _currentIndex == 0 ? 'Panel de gestor' : 'Mi perfil',
+            style: const TextStyle(
+              color: AppTheme.navyBlue,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          centerTitle: false,
+          bottom: _currentIndex == 0 ? const TabBar(
+            indicatorColor: AppTheme.navyBlue,
+            labelColor: AppTheme.navyBlue,
+            unselectedLabelColor: Colors.black54,
+            labelStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            tabs: [
+              Tab(text: 'Pedidos por procesar'),
+              Tab(text: 'Pedidos por asignar'),
+            ],
+          ) : null,
+        ),
+
+        // 2. EL MENÚ HAMBURGUESA
+        drawer: Drawer(
+          backgroundColor: const Color(0xFFF9F5F0), // Fondo crema
+          child: Column(
+            children: [
+              Expanded(
+                child: ListView(
+                  padding: EdgeInsets.zero,
+                  physics: const BouncingScrollPhysics(),
+                  children: [
+                    // Encabezado con el fondo marino que acordamos
+                    DrawerHeader(
+                      decoration: const BoxDecoration(
+                        color: AppTheme.navyBlue,
+                        borderRadius: BorderRadius.only(bottomRight: Radius.circular(30)),
+                      ),
+                      child: Center(
+                        child: Image.asset('assets/images/logo_firma.png', height: 100),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+
+                    // Opciones genéricas
+                    ListTile(
+                      leading: const Icon(Icons.info_outline, color: AppTheme.navyBlue),
+                      title: const Text('Acerca de Firma del Sabor', style: TextStyle(color: AppTheme.navyBlue, fontWeight: FontWeight.bold)),
+                      onTap: () {},
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.description_outlined, color: AppTheme.navyBlue),
+                      title: const Text('Términos y Condiciones', style: TextStyle(color: AppTheme.navyBlue, fontWeight: FontWeight.bold)),
+                      onTap: () {},
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.accessibility_new, color: AppTheme.navyBlue),
+                      title: const Text('Soporte y Accesibilidad', style: TextStyle(color: AppTheme.navyBlue, fontWeight: FontWeight.bold)),
+                      onTap: () {},
+                    ),
+                  ],
+                ),
+              ),
+
+              // Botón de Cerrar Sesión
+              const Divider(color: Colors.black12),
+              ListTile(
+                leading: const Icon(Icons.logout, color: Colors.redAccent),
+                title: const Text(
+                  'Cerrar Sesión',
+                  style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold, fontSize: 16),
+                ),
+                onTap: () async {
+                  showDialog(
+                    context: context,
+                    barrierDismissible: false,
+                    builder: (context) => const Center(child: CircularProgressIndicator(color: AppTheme.orangeBrand)),
+                  );
+
+                  await AuthService().logout();
+
+                  if (context.mounted) {
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(builder: (context) => const LoginScreen()),
+                          (route) => false,
+                    );
+                  }
+                },
+              ),
+              const SizedBox(height: 30),
+            ],
           ),
         ),
-        centerTitle: false,
-      ),
 
-      // 👇 2. AGREGAMOS EL MENÚ HAMBURGUESA EXACTAMENTE IGUAL AL DEL COMPRADOR
-      drawer: Drawer(
-        backgroundColor: const Color(0xFFF9F5F0), // Fondo crema
-        child: Column(
+        // 3. EL CUERPO (Donde cargan las pestañas o el perfil)
+        body: _currentIndex == 0
+            ? const TabBarView(
+          physics: BouncingScrollPhysics(),
           children: [
-            Expanded(
-              child: ListView(
-                padding: EdgeInsets.zero,
-                physics: const BouncingScrollPhysics(),
-                children: [
-                  // Encabezado con el fondo marino que acordamos
-                  DrawerHeader(
-                    decoration: const BoxDecoration(
-                      color: AppTheme.navyBlue,
-                      borderRadius: BorderRadius.only(bottomRight: Radius.circular(30)),
-                    ),
-                    child: Center(
-                      child: Image.asset('assets/images/logo_firma.png', height: 100),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-
-                  // Opciones genéricas
-                  ListTile(
-                    leading: const Icon(Icons.info_outline, color: AppTheme.navyBlue),
-                    title: const Text('Acerca de Firma del Sabor', style: TextStyle(color: AppTheme.navyBlue, fontWeight: FontWeight.bold)),
-                    onTap: () {},
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.description_outlined, color: AppTheme.navyBlue),
-                    title: const Text('Términos y Condiciones', style: TextStyle(color: AppTheme.navyBlue, fontWeight: FontWeight.bold)),
-                    onTap: () {},
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.accessibility_new, color: AppTheme.navyBlue),
-                    title: const Text('Soporte y Accesibilidad', style: TextStyle(color: AppTheme.navyBlue, fontWeight: FontWeight.bold)),
-                    onTap: () {},
-                  ),
-                ],
-              ),
-            ),
-
-            // Botón de Cerrar Sesión
-            const Divider(color: Colors.black12),
-            ListTile(
-              leading: const Icon(Icons.logout, color: Colors.redAccent),
-              title: const Text(
-                'Cerrar Sesión',
-                style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold, fontSize: 16),
-              ),
-              onTap: () async {
-                // Indicador de carga
-                showDialog(
-                  context: context,
-                  barrierDismissible: false,
-                  builder: (context) => const Center(child: CircularProgressIndicator(color: AppTheme.orangeBrand)),
-                );
-
-                // Cerramos sesión
-                await AuthService().logout();
-
-                // Navegamos al Login
-                if (context.mounted) {
-                  Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(builder: (context) => const LoginScreen()),
-                        (route) => false,
-                  );
-                }
-              },
-            ),
-            const SizedBox(height: 30),
+            GestorOrdersTab(),
+            GestorAssignTab()
           ],
-        ),
-      ),
+        )
+            : _pages[1],
 
-      body: _pages[_currentIndex],
-
-      // La Bottom Navigation Bar amarilla
-      bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
-          border: Border(top: BorderSide(color: Colors.black12, width: 1)),
-        ),
-        child: BottomNavigationBar(
-          backgroundColor: AppTheme.brandYellow,
-          currentIndex: _currentIndex,
-          onTap: (index) => setState(() => _currentIndex = index),
-          selectedItemColor: AppTheme.navyBlue,
-          unselectedItemColor: AppTheme.navyBlue.withOpacity(0.5),
-          showSelectedLabels: false,
-          showUnselectedLabels: false,
-          iconSize: 32,
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.inventory_2_outlined),
-              activeIcon: Icon(Icons.inventory_2),
-              label: 'Pedidos',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.manage_accounts_outlined),
-              activeIcon: Icon(Icons.manage_accounts),
-              label: 'Perfil',
-            ),
-          ],
+        // 4. LA BARRA DE NAVEGACIÓN INFERIOR
+        bottomNavigationBar: Container(
+          decoration: const BoxDecoration(
+            border: Border(top: BorderSide(color: Colors.black12, width: 1)),
+          ),
+          child: BottomNavigationBar(
+            backgroundColor: AppTheme.brandYellow,
+            currentIndex: _currentIndex,
+            onTap: (index) => setState(() => _currentIndex = index),
+            selectedItemColor: AppTheme.navyBlue,
+            unselectedItemColor: AppTheme.navyBlue.withOpacity(0.5),
+            showSelectedLabels: false,
+            showUnselectedLabels: false,
+            iconSize: 32,
+            items: const [
+              BottomNavigationBarItem(
+                icon: Icon(Icons.inventory_2_outlined),
+                activeIcon: Icon(Icons.inventory_2),
+                label: 'Pedidos',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.manage_accounts_outlined),
+                activeIcon: Icon(Icons.manage_accounts),
+                label: 'Perfil',
+              ),
+            ],
+          ),
         ),
       ),
     );
