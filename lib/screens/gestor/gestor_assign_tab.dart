@@ -23,6 +23,18 @@ class _GestorAssignTabState extends State<GestorAssignTab> {
     super.initState();
     _loadData();
   }
+  // Función Traductora: Convierte la lista de productos en un texto amigable
+  String _buildItemsText(List<dynamic>? items) {
+    if (items == null || items.isEmpty) return 'Productos no detallados';
+
+    // Convertimos [{amount: 2, name: Salsa}, {amount: 1, name: Tepache}]
+    // en "2x Salsa, 1x Tepache"
+    List<String> textParts = items.map((item) {
+      return '${item['amount_item']}x ${item['name']}';
+    }).toList();
+
+    return textParts.join(', '); // Los unimos con comas
+  }
 
   Future<void> _loadData() async {
     final adminsData = await _gestorService.fetchAdmins();

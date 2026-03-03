@@ -39,6 +39,14 @@ class _AdminOrdersTabState extends State<AdminOrdersTab> {
       default: return dbStatus;
     }
   }
+// Función Traductora para el Admin
+  String _buildItemsText(List<dynamic>? items) {
+    if (items == null || items.isEmpty) return 'Productos no detallados';
+    List<String> textParts = items.map((item) {
+      return '${item['amount_item']}x ${item['name']}';
+    }).toList();
+    return textParts.join(', ');
+  }
 
   // Lógica del botón de acción
   Map<String, dynamic> _getButtonAction(String status) {
@@ -80,9 +88,34 @@ class _AdminOrdersTabState extends State<AdminOrdersTab> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Pedido #${order['order_id']} - ${order['buyer_name']}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppTheme.navyBlue)),
+                    Text('Pedido #${order['order_id']} - ${_buildItemsText(order['items'])}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppTheme.navyBlue)),
                     const SizedBox(height: 8),
-                    const Row(children: [Icon(Icons.location_on_outlined, size: 16, color: Colors.black54), SizedBox(width: 5), Text('Dirección del cliente...', style: TextStyle(color: Colors.black54))]),
+
+                    Row(
+                        children: [
+                          const Icon(Icons.person_outline, size: 16, color: Colors.black54),
+                          const SizedBox(width: 5),
+                          Text('Cliente: ${order['buyer_name']}', style: const TextStyle(color: Colors.black54, fontWeight: FontWeight.bold))
+                        ]
+                    ),
+                    const SizedBox(height: 5),
+
+                    Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Icon(Icons.location_on_outlined, size: 16, color: Colors.black54),
+                          const SizedBox(width: 5),
+                          Expanded( // Usamos Expanded para que si la dirección es larga, baje de renglón
+                            child: Text(
+                              // Si Laravel manda una dirección la usamos, si viene nula ponemos el texto alternativo
+                              order['address'] ?? order['buyer_address'] ?? 'Dirección no disponible',
+                              style: const TextStyle(color: Colors.black54),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          )
+                        ]
+                    ),
                     const SizedBox(height: 20),
 
                     // BOTÓN PARA AVANZAR ESTADO

@@ -44,6 +44,18 @@ class _GestorOrdersTabState extends State<GestorOrdersTab> {
       default: return dbStatus;
     }
   }
+  // Función Traductora: Convierte la lista de productos en un texto amigable
+  String _buildItemsText(List<dynamic>? items) {
+    if (items == null || items.isEmpty) return 'Productos no detallados';
+
+    // Convertimos [{amount: 2, name: Salsa}, {amount: 1, name: Tepache}]
+    // en "2x Salsa, 1x Tepache"
+    List<String> textParts = items.map((item) {
+      return '${item['amount_item']}x ${item['name']}';
+    }).toList();
+
+    return textParts.join(', '); // Los unimos con comas
+  }
 
   // Configuración interactiva del botón
   Map<String, dynamic> _getButtonAction(String status) {
@@ -116,7 +128,7 @@ class _GestorOrdersTabState extends State<GestorOrdersTab> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Pedido #${order['order_id']} - 2x Productos', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppTheme.navyBlue)),
+                          Text('Pedido #${order['order_id']} - ${_buildItemsText(order['items'])}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppTheme.navyBlue)),
                           const SizedBox(height: 8),
                           Row(children: [const Icon(Icons.access_time, size: 16, color: Colors.black54), const SizedBox(width: 5), Text('Hace unos minutos', style: TextStyle(color: Colors.grey.shade700, fontSize: 14))]),
                           const SizedBox(height: 20),
