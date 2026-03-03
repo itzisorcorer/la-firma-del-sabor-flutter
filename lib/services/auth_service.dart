@@ -86,4 +86,50 @@ class AuthService {
     }
 
   }
+  // Obtener los datos actuales del usuario
+  Future<Map<String, dynamic>?> getUserProfile() async {
+    final token = await getToken();
+    final url = Uri.parse('${ApiConstants.baseUrl}/user');
+
+    try {
+      final response = await http.get(url, headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      });
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      }
+    } catch (e) {
+      print('Error al obtener perfil: $e');
+    }
+    return null;
+  }
+  // Actualizar la dirección
+  Future<bool> updateProfile(Map<String, dynamic> profileData) async {
+    final token = await getToken();
+    final url = Uri.parse('${ApiConstants.baseUrl}/profile');
+
+    try {
+      final response = await http.put(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode(profileData),
+      );
+      if(response.statusCode == 200){
+        return true;
+      }else{
+        print('Error de Laravel: ${response.statusCode}');
+        print('Desgloce: ${response.body}');
+        return false;
+      }
+
+    } catch (e) {
+      print('Error al actualizar perfil: $e');
+      return false;
+    }
+  }
 }

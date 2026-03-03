@@ -1,3 +1,4 @@
+import 'package:app_firma_sabor/screens/profile_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:app_firma_sabor/constants/app_theme.dart';
 import 'package:app_firma_sabor/screens/home_tab.dart';
@@ -50,7 +51,12 @@ class _MainScreenState extends State<MainScreen> {
             label: "Mi perfil",
             child: IconButton(
               icon: const Icon(Icons.account_circle_outlined, color: AppTheme.navyBlue, size: 35),
-              onPressed: () {},
+              onPressed: () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const ProfileScreen()),
+                );
+              },
             ),
           ),
           const SizedBox(width: 10),
