@@ -17,7 +17,7 @@ class ProductDetailScreen extends StatefulWidget {
 
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
   final ProductService _productService = ProductService();
-  final HomeService _homeService = HomeService(); // Para reciclar la función del toggle
+  final HomeService _homeService = HomeService();
 
   bool _isLoading = true;
   Map<String, dynamic>? _product;
@@ -37,6 +37,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       setState(() {
         _product = data['product'];
         _isFavorite = data['is_favorite'];
+
+        _quantity = (_product!['stock'] > 0) ? 1 : 0;
         _isLoading = false;
       });
     } else {
@@ -44,21 +46,17 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     }
   }
 
-  // Lógica de Favoritos
   void _toggleFavorite() async {
-    // 1. Cambio visual instantáneo
     setState(() {
       _isFavorite = !_isFavorite;
     });
 
     try {
-      // 2. Llamada a Laravel
       final isNowFavorite = await _homeService.toggleFavorite(widget.productId);
       if (_isFavorite != isNowFavorite && mounted) {
         setState(() => _isFavorite = isNowFavorite);
       }
     } catch (e) {
-      // 3. Si falla, revertimos
       if (mounted) {
         setState(() => _isFavorite = !_isFavorite);
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Error al guardar favorito')));
@@ -66,7 +64,21 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     }
   }
 
-  void _increment() => setState(() => _quantity++);
+  //Lógica del botón + con límite
+  void _increment() {
+    if (_product != null && _quantity < _product!['stock']) {
+      setState(() => _quantity++);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('¡Has alcanzado el límite de stock!'),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
   void _decrement() {
     if (_quantity > 1) setState(() => _quantity--);
   }
@@ -88,27 +100,27 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     }
 
     final creatorName = _product!['creator']?['name'] ?? 'Creador';
+    final int stockAvailable = _product!['stock'] ?? 0;
+    final bool hasStock = stockAvailable > 0;
+    final bool canAddMore = _quantity < stockAvailable;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF9F5F0), // Fondo cremita de tu diseño
+      backgroundColor: const Color(0xFFF9F5F0),
       body: SingleChildScrollView(
         child: Stack(
           clipBehavior: Clip.none,
           children: [
-            // --- 1. IMAGEN DE FONDO (Capa inferior) ---
             SizedBox(
               height: 350,
               width: double.infinity,
               child: Image.network(
-                // Bypass con la imagen que SÍ funciona
                 'https://media.airedesantafe.com.ar/p/9ac096426bd44b6fe19d566ec41b5083/adjuntos/268/imagenes/003/771/0003771857/1200x0/smart/imagepng.png',
                 fit: BoxFit.cover,
               ),
             ),
 
-            // --- 2. CONTENIDO CREMITA (Sube un poco para tapar la foto) ---
             Container(
-              margin: const EdgeInsets.only(top: 320), // Empieza en el pixel 320
+              margin: const EdgeInsets.only(top: 320),
               decoration: const BoxDecoration(
                 color: Color(0xFFF9F5F0),
                 borderRadius: BorderRadius.only(
@@ -121,20 +133,32 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Título
                     Text(
                       _product!['name'],
                       style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: AppTheme.navyBlue),
                     ),
                     const SizedBox(height: 10),
 
-                    // Precio y Contador
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          '\$${_product!['price']}',
-                          style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: AppTheme.navyBlue),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '\$${_product!['price']}',
+                              style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: AppTheme.navyBlue),
+                            ),
+                            // Letrerito de stock
+                            Text(
+                              hasStock ? 'Disponibles: $stockAvailable' : 'Agotado',
+                              style: TextStyle(
+                                color: hasStock ? Colors.green : Colors.red,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
                         ),
                         Row(
                           children: [
@@ -155,16 +179,21 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                               style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.navyBlue),
                             ),
                             const SizedBox(width: 15),
+
+                            //BOTÓN + CON VALIDACIÓN DE COLOR
                             GestureDetector(
                               onTap: _increment,
                               child: Container(
                                 padding: const EdgeInsets.all(4),
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
-                                  color: AppTheme.orangeBrand,
-                                  border: Border.all(color: AppTheme.orangeBrand, width: 1.5),
+                                  color: canAddMore ? AppTheme.orangeBrand : Colors.grey.shade400,
+                                  border: Border.all(
+                                      color: canAddMore ? AppTheme.orangeBrand : Colors.grey.shade400,
+                                      width: 1.5
+                                  ),
                                 ),
-                                child: const Icon(Icons.add, color: Colors.white, size: 20),
+                                child: const Icon(Icons.add, color: Colors.white, size: 20,),
                               ),
                             ),
                           ],
@@ -173,7 +202,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     ),
                     const SizedBox(height: 25),
 
-                    // Acerca del producto
                     const Text(
                       "Acerca del producto",
                       style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: AppTheme.navyBlue),
@@ -186,20 +214,17 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     ),
                     const SizedBox(height: 25),
 
-                    // Conoce más (Videos en Carrusel Horizontal)
                     const Text(
                       "Conoce más este producto",
                       style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: AppTheme.navyBlue),
                     ),
                     const SizedBox(height: 15),
 
-                    // LÓGICA DE VIDEOS (CORREGIDA)
                     Builder(
                         builder: (context) {
                           final List<dynamic> videos = _product!['videos'] ?? [];
 
                           if (videos.isEmpty) {
-                            // Si no hay videos, se muestra este texto
                             return Padding(
                               padding: const EdgeInsets.only(bottom: 20.0),
                               child: Row(
@@ -215,7 +240,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                             );
                           }
 
-                          // Si hay videos, armamos el carrusel horizontal
                           return SingleChildScrollView(
                             scrollDirection: Axis.horizontal,
                             physics: const BouncingScrollPhysics(),
@@ -230,20 +254,19 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     ),
                     const SizedBox(height: 40),
 
-                    // Botón Agregar al carrito
+                    // 👇 BOTÓN FINAL: SE BLOQUEA SI NO HAY STOCK
                     SizedBox(
                       width: double.infinity,
                       height: 60,
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AppTheme.orangeBrand,
+                          backgroundColor: hasStock ? AppTheme.orangeBrand : Colors.grey.shade400,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                           elevation: 0,
                         ),
-                        onPressed: () {
-                          //guarda el producto en el carrito
+                        // Si no hay stock, pasamos 'null' para deshabilitar el botón
+                        onPressed: hasStock ? () {
                           CartService().addToCart(_product!, _quantity);
-                          //alerta de exito
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text('¡Agregaste $_quantity ${_product!['name']} al carrito! 🛒'),
@@ -251,10 +274,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                               behavior: SnackBarBehavior.floating,
                             ),
                           );
-                        },
-                        child: const Text(
-                          "Agregar al carrito",
-                          style: TextStyle(fontSize: 20, color: Colors.black, fontWeight: FontWeight.bold),
+                        } : null,
+                        child: Text(
+                          hasStock ? "Agregar al carrito" : "Agotado",
+                          style: const TextStyle(fontSize: 20, color: Colors.black, fontWeight: FontWeight.bold),
                         ),
                       ),
                     ),
@@ -264,15 +287,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               ),
             ),
 
-            // --- 3. BOTONES FLOTANTES ---
-
-            // Botón Conoce a [Creador]
             Positioned(
               top: 300,
               left: 20,
               child: GestureDetector(
                 onTap: () {
-                  // Navegamos a la pantalla del perfil del creador
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -290,11 +309,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     borderRadius: BorderRadius.circular(25),
                     border: Border.all(color: AppTheme.navyBlue, width: 2),
                     boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.15),
-                        blurRadius: 8,
-                        offset: const Offset(0, 4),
-                      ),
+                      BoxShadow(color: Colors.black.withOpacity(0.15), blurRadius: 8, offset: const Offset(0, 4)),
                     ],
                   ),
                   child: Row(
@@ -311,9 +326,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               ),
             ),
 
-            // Botón Favoritos
             Positioned(
-              top: 295, // Costura
+              top: 295,
               right: 30,
               child: GestureDetector(
                 onTap: _toggleFavorite,
@@ -329,7 +343,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               ),
             ),
 
-            // Botón Atrás
             Positioned(
               top: 50,
               left: 20,
@@ -337,25 +350,18 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 onTap: () => Navigator.pop(context),
                 child: Container(
                   padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(15),
-                  ),
+                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15)),
                   child: const Icon(Icons.reply, color: AppTheme.navyBlue, size: 28),
                 ),
               ),
             ),
 
-            // Flecha del carrusel de imágenes
             Positioned(
               top: 150,
               right: 15,
               child: Container(
                 padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.8),
-                  shape: BoxShape.circle,
-                ),
+                decoration: BoxDecoration(color: Colors.white.withOpacity(0.8), shape: BoxShape.circle),
                 child: const Icon(Icons.arrow_forward, color: AppTheme.orangeBrand),
               ),
             ),
@@ -366,16 +372,14 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   }
 }
 
-
-// --- WIDGET REPRODUCTOR DE VIDEO ---
 class VideoPlayerItem extends StatefulWidget {
   final String videoUrl;
-  final String accessibilityDescription; // 👈 NUEVA VARIABLE
+  final String accessibilityDescription;
 
   const VideoPlayerItem({
     super.key,
     required this.videoUrl,
-    required this.accessibilityDescription, // 👈 LA PEDIMOS AQUÍ
+    required this.accessibilityDescription,
   });
 
   @override
@@ -415,14 +419,12 @@ class _VideoPlayerItemState extends State<VideoPlayerItem> {
   Widget build(BuildContext context) {
     if (_isError) return const SizedBox.shrink();
 
-    // Envolvemos el video y el texto en un contenedor con ancho fijo (280)
     return Container(
       width: 280,
       margin: const EdgeInsets.only(right: 15),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 1. EL REPRODUCTOR DE VIDEO
           Container(
             height: 160,
             width: double.infinity,
@@ -444,10 +446,7 @@ class _VideoPlayerItemState extends State<VideoPlayerItem> {
               ),
             ),
           ),
-
-          const SizedBox(height: 10), // Espacio entre el video y el texto
-
-          // 2. EL TEXTO DE ACCESIBILIDAD
+          const SizedBox(height: 10),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -462,7 +461,7 @@ class _VideoPlayerItemState extends State<VideoPlayerItem> {
                       fontStyle: FontStyle.italic,
                       height: 1.3
                   ),
-                  maxLines: 7, // Si el texto es muy largo, ponemos puntos suspensivos
+                  maxLines: 7,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:app_firma_sabor/constants/app_theme.dart';
 
+import 'create_product_screen.dart';
+
 class AdminHomeTab extends StatelessWidget {
   const AdminHomeTab({super.key});
 
@@ -69,7 +71,7 @@ class AdminHomeTab extends StatelessWidget {
                 shadowColor: AppTheme.orangeBrand.withOpacity(0.5),
               ),
               onPressed: () {
-                // Aquí abriremos el formulario para crear producto después
+                Navigator.push(context, MaterialPageRoute(builder: (context) => const CreateProductScreen()));
               },
               child: const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
