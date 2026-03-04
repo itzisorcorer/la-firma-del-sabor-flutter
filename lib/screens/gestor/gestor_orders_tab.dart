@@ -15,7 +15,6 @@ class _GestorOrdersTabState extends State<GestorOrdersTab> {
   List<dynamic> _orders = [];
   String _selectedFilter = 'Todos';
 
-  // Solo mostraremos los filtros relevantes para esta etapa
   final List<String> _filters = ['Todos', 'pending', 'in_progress', 'labeled'];
 
   @override
@@ -28,14 +27,12 @@ class _GestorOrdersTabState extends State<GestorOrdersTab> {
     final orders = await _gestorService.fetchAllOrders();
     if (mounted) {
       setState(() {
-        // En esta pestaña SOLO mostramos los que no han sido asignados
         _orders = orders.where((o) => ['pending', 'in_progress', 'labeled'].contains(o['status'])).toList();
         _isLoading = false;
       });
     }
   }
 
-  // Traducción visual
   String _translateStatus(String dbStatus) {
     switch (dbStatus) {
       case 'pending': return 'Pendiente';
@@ -44,20 +41,31 @@ class _GestorOrdersTabState extends State<GestorOrdersTab> {
       default: return dbStatus;
     }
   }
-  // Función Traductora: Convierte la lista de productos en un texto amigable
+
   String _buildItemsText(List<dynamic>? items) {
     if (items == null || items.isEmpty) return 'Productos no detallados';
-
-    // Convertimos [{amount: 2, name: Salsa}, {amount: 1, name: Tepache}]
-    // en "2x Salsa, 1x Tepache"
     List<String> textParts = items.map((item) {
       return '${item['amount_item']}x ${item['name']}';
     }).toList();
-
-    return textParts.join(', '); // Los unimos con comas
+    return textParts.join(', ');
   }
 
-  // Configuración interactiva del botón
+  // 👇 NUEVA MAQUINITA DEL TIEMPO
+  String _getTimeAgo(String? dateString) {
+    if (dateString == null) return 'Fecha desconocida';
+    try {
+      DateTime parsedDate = DateTime.parse(dateString);
+      Duration difference = DateTime.now().difference(parsedDate);
+
+      if (difference.inDays > 0) return 'Hace ${difference.inDays} días';
+      if (difference.inHours > 0) return 'Hace ${difference.inHours} horas';
+      if (difference.inMinutes > 0) return 'Hace ${difference.inMinutes} minutos';
+      return 'Hace unos instantes';
+    } catch (e) {
+      return 'Fecha inválida';
+    }
+  }
+
   Map<String, dynamic> _getButtonAction(String status) {
     switch (status) {
       case 'pending': return {'text': 'Empezar a preparar', 'color': AppTheme.orangeBrand, 'nextStatus': 'in_progress'};
@@ -78,7 +86,6 @@ class _GestorOrdersTabState extends State<GestorOrdersTab> {
     return Column(
       children: [
         const SizedBox(height: 15),
-        // CARRUSEL DE FILTROS
         SizedBox(
           height: 40,
           child: ListView.builder(
@@ -106,10 +113,9 @@ class _GestorOrdersTabState extends State<GestorOrdersTab> {
 
         const SizedBox(height: 15),
 
-        // TARJETAS
         Expanded(
           child: filteredOrders.isEmpty
-              ? const Center(child: Text('No hay pedidos en esta fase 📦', style: TextStyle(color: AppTheme.navyBlue, fontSize: 18)))
+              ? const Center(child: Text('No hay pedidos en esta fase', style: TextStyle(color: AppTheme.navyBlue, fontSize: 18)))
               : ListView.builder(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
             itemCount: filteredOrders.length,
@@ -130,10 +136,28 @@ class _GestorOrdersTabState extends State<GestorOrdersTab> {
                         children: [
                           Text('Pedido #${order['order_id']} - ${_buildItemsText(order['items'])}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppTheme.navyBlue)),
                           const SizedBox(height: 8),
-                          Row(children: [const Icon(Icons.access_time, size: 16, color: Colors.black54), const SizedBox(width: 5), Text('Hace unos minutos', style: TextStyle(color: Colors.grey.shade700, fontSize: 14))]),
+
+                          // 👇 AGREGAMOS EL NOMBRE DEL COMPRADOR
+                          Row(
+                              children: [
+                                const Icon(Icons.person_outline, size: 16, color: Colors.black54),
+                                const SizedBox(width: 5),
+                                Text('Cliente: ${order['buyer_name'] ?? 'Desconocido'}', style: const TextStyle(color: Colors.black54, fontWeight: FontWeight.bold)),
+                              ]
+                          ),
+                          const SizedBox(height: 5),
+
+                          // 👇 USAMOS LA MAQUINITA DEL TIEMPO CON 'created_at' (o 'updated_at' si prefieres)
+                          Row(
+                              children: [
+                                const Icon(Icons.access_time, size: 16, color: Colors.black54),
+                                const SizedBox(width: 5),
+                                Text(_getTimeAgo(order['created_at']), style: TextStyle(color: Colors.grey.shade700, fontSize: 14)),
+                              ]
+                          ),
+
                           const SizedBox(height: 20),
 
-                          // BOTÓN MÁGICO
                           Center(
                             child: SizedBox(
                               height: 45, width: 250,
@@ -141,11 +165,10 @@ class _GestorOrdersTabState extends State<GestorOrdersTab> {
                                 style: ElevatedButton.styleFrom(backgroundColor: btnAction['color'], shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)), elevation: 0),
                                 onPressed: () async {
                                   if (btnAction['nextStatus'] != null) {
-                                    // Lanzamos la actualización a Laravel
                                     bool success = await _gestorService.updateOrder(order['order_id'], status: btnAction['nextStatus']);
                                     if (success) {
                                       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('¡Estado actualizado!')));
-                                      _loadOrders(); // Recargamos la lista
+                                      _loadOrders();
                                     }
                                   }
                                 },
@@ -156,7 +179,6 @@ class _GestorOrdersTabState extends State<GestorOrdersTab> {
                         ],
                       ),
                     ),
-                    // PÍLDORA DE ESTADO
                     Positioned(
                       top: 0, right: 0,
                       child: Container(

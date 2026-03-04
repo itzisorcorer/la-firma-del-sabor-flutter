@@ -39,13 +39,32 @@ class _AdminOrdersTabState extends State<AdminOrdersTab> {
       default: return dbStatus;
     }
   }
-// Función Traductora para el Admin
+// Función para leer los datos de los productos para el Admin
   String _buildItemsText(List<dynamic>? items) {
     if (items == null || items.isEmpty) return 'Productos no detallados';
     List<String> textParts = items.map((item) {
       return '${item['amount_item']}x ${item['name']}';
     }).toList();
     return textParts.join(', ');
+  }
+  // Función para leer la dirección completa
+  String _buildAddressText(Map<String, dynamic> order) {
+    final street = order['buyer_street'];
+    final neighborhood = order['buyer_neighborhood'];
+    final city = order['buyer_city'];
+    final postal = order['buyer_postal_code'];
+
+    if (street == null || street.toString().trim().isEmpty) {
+      return 'Dirección no disponible (El cliente no ha llenado su perfil)';
+    }
+
+    List<String> parts = [];
+    parts.add(street.toString());
+    if (neighborhood != null && neighborhood.toString().isNotEmpty) parts.add('Col. $neighborhood');
+    if (city != null && city.toString().isNotEmpty) parts.add(city.toString());
+    if (postal != null && postal.toString().isNotEmpty) parts.add('C.P. $postal');
+
+    return parts.join(', ');
   }
 
   // Lógica del botón de acción
@@ -107,8 +126,24 @@ class _AdminOrdersTabState extends State<AdminOrdersTab> {
                           const SizedBox(width: 5),
                           Expanded( // Usamos Expanded para que si la dirección es larga, baje de renglón
                             child: Text(
-                              // Si Laravel manda una dirección la usamos, si viene nula ponemos el texto alternativo
-                              order['address'] ?? order['buyer_address'] ?? 'Dirección no disponible',
+                              //usamos la función que arma la dirección
+                              _buildAddressText(order),
+                              style: const TextStyle(color: Colors.black54),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          )
+                        ]
+                    ),
+                    Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Icon(Icons.phone_in_talk_sharp, size: 16, color: Colors.black54),
+                          const SizedBox(width: 5),
+                          Expanded( //expanded permite que si la dirección es larga, baje de renglón
+                            child: Text(
+
+                              '${order['buyer_phone'] ?? 'Sin numéro de telefono disponible'}',
                               style: const TextStyle(color: Colors.black54),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,

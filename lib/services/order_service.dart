@@ -18,8 +18,11 @@ class OrderService{
       if(response.statusCode == 200){
         final data = jsonDecode(response.body);
         return data['data'] ?? [];
+      }else {
+        print('Error del laravel: ${response.statusCode}');
+        print('detalles de error: ${response.body}');
+        return [];
       }
-      return [];
     }catch(e){
       print('Error al obener los pedidos: $e');
       return [];

@@ -39,6 +39,7 @@ class _OrdersTabState extends State<OrdersTab> {
       case 'in_transit': return {'text': 'En Camino', 'color': Colors.purple};
       case 'delivered': return {'text': 'Entregado', 'color': Colors.green};
       case 'canceled': return {'text': 'Cancelado', 'color': Colors.red};
+      case 'completed': return {'text': 'completado', 'color': Colors.purpleAccent};
       default: return {'text': 'Procesando', 'color': Colors.grey};
     }
   }
