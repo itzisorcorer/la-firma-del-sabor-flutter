@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:app_firma_sabor/constants/app_theme.dart';
 import 'package:app_firma_sabor/services/cart_service.dart';
+import 'package:app_firma_sabor/constants/api_constants.dart';
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
@@ -24,7 +25,7 @@ class _CartScreenState extends State<CartScreen> {
         children: [
           Expanded(
             child: cartItems.isEmpty
-                ? const Center(child: Text("Tu carrito está vacío 🛒", style: TextStyle(fontSize: 18, color: Colors.grey)))
+                ? const Center(child: Text("Tu carrito está vacío...", style: TextStyle(fontSize: 18, color: Colors.grey)))
                 : ListView.builder(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 25),
               physics: const BouncingScrollPhysics(),
@@ -40,6 +41,21 @@ class _CartScreenState extends State<CartScreen> {
       ),
     );
   }
+  //widget para cargar el carrito
+  Widget _buildCartImage(String? imagePath) {
+    if (imagePath == null || imagePath.isEmpty) {
+      return Image.asset('assets/images/not_available.jpg', fit: BoxFit.cover, width: 110, height: 100);
+    }
+    if (imagePath.startsWith('http')) {
+      return Image.network(imagePath, fit: BoxFit.cover, width: 110, height: 100,
+        errorBuilder: (context, error, stackTrace) => Image.asset('assets/images/not_available.jpg', fit: BoxFit.cover, width: 110, height: 100),
+      );
+    }
+    final serverUrl = ApiConstants.baseUrl.replaceAll('/api', '');
+    return Image.network('$serverUrl/storage/$imagePath', fit: BoxFit.cover, width: 110, height: 100,
+      errorBuilder: (context, error, stackTrace) => Image.asset('assets/images/not_available.jpg', fit: BoxFit.cover, width: 110, height: 100),
+    );
+  }
 
   Widget _buildCartItem(Map<String, dynamic> item, int index) {
     return Container(
@@ -53,13 +69,7 @@ class _CartScreenState extends State<CartScreen> {
         children: [
           ClipRRect(
             borderRadius: const BorderRadius.horizontal(left: Radius.circular(25)),
-            child: Image.network(
-              // 👇 SALVAVIDAS 1: Si la imagen es null, usamos la de prueba
-              item['image'] ?? 'https://media.airedesantafe.com.ar/p/9ac096426bd44b6fe19d566ec41b5083/adjuntos/268/imagenes/003/771/0003771857/1200x0/smart/imagepng.png',
-              width: 110,
-              height: 100,
-              fit: BoxFit.cover,
-            ),
+            child: _buildCartImage(item['image']),
           ),
           const SizedBox(width: 15),
           Expanded(

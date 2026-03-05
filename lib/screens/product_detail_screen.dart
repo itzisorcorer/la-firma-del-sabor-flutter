@@ -66,7 +66,13 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     }
   }
 
-  void _increment() => setState(() => _quantity++);
+  void _increment() {
+    if (_product != null && _quantity < _product!['stock']) {
+      setState(() => _quantity++);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('¡Has alcanzado el límite de stock!'), backgroundColor: Colors.red, duration: Duration(seconds: 2)));
+    }
+  }
   void _decrement() {
     if (_quantity > 1) setState(() => _quantity--);
   }
@@ -119,6 +125,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     }
 
     final creatorName = _product!['creator']?['name'] ?? 'Creador';
+    final int stockAvailable = _product!['stock'] ?? 0;
+    final bool hasStock = stockAvailable > 0;
+    final bool canAddMore = _quantity < stockAvailable;
 
     final List<dynamic> productImages = _product!['images'] ?? [];
 
@@ -182,7 +191,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     ),
                   ),
 
-                  // 👇 --- NUEVO: BOTONES DE NAVEGACIÓN ACCESIBLES ---
+                  //  ---BOTONES DE NAVEGACIÓN ACCESIBLES ---
 
                   // Botón Atrás (Izquierda) - Oculto si es la primera foto
                   if (_currentImageIndex > 0)
@@ -261,10 +270,22 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          '\$${_product!['price']}',
-                          style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: AppTheme.navyBlue),
+
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '\$${_product!['price']}',
+                              style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: AppTheme.navyBlue),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              hasStock ? 'Disponibles: $stockAvailable' : 'Agotado',
+                              style: TextStyle(color: hasStock ? Colors.green : Colors.red, fontWeight: FontWeight.bold, fontSize: 14),
+                            ),
+                          ],
                         ),
+
                         Row(
                           children: [
                             GestureDetector(
@@ -294,7 +315,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                   border: Border.all(color: AppTheme.orangeBrand, width: 1.5),
                                 ),
                                 child: const Icon(Icons.add, color: Colors.white, size: 20,),
-
                               ),
                             ),
                           ],
@@ -364,18 +384,18 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                           elevation: 0,
                         ),
-                        onPressed: () {
+                        onPressed: hasStock ? () {
                           CartService().addToCart(_product!, _quantity);
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text('¡Agregaste $_quantity ${_product!['name']} al carrito! 🛒'),
+                              content: Text('¡Agregaste $_quantity ${_product!['name']} al carrito!'),
                               backgroundColor: AppTheme.orangeBrand,
                               behavior: SnackBarBehavior.floating,
                             ),
                           );
-                        },
-                        child: const Text(
-                          "Agregar al carrito",
+                        } : null,
+                        child: Text(hasStock ?
+                          "Agregar al carrito" : "Agotado",
                           style: TextStyle(fontSize: 20, color: Colors.black, fontWeight: FontWeight.bold),
                         ),
                       ),
