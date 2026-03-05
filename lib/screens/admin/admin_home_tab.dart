@@ -4,6 +4,8 @@ import 'package:app_firma_sabor/constants/api_constants.dart';
 import 'package:app_firma_sabor/services/admin_service.dart';
 import 'package:app_firma_sabor/screens/admin/create_product_screen.dart';
 
+import 'edit_product_screen.dart';
+
 class AdminHomeTab extends StatefulWidget {
   const AdminHomeTab({super.key});
 
@@ -70,6 +72,13 @@ class _AdminHomeTabState extends State<AdminHomeTab> {
   Widget _buildProductImage(String? imagePath) {
     if (imagePath == null || imagePath.isEmpty) {
       return Image.asset('assets/images/not_available.jpg', fit: BoxFit.cover);
+    }
+    if(imagePath.startsWith('http')){
+      return Image.network(
+       imagePath,
+       fit: BoxFit.cover,
+       errorBuilder: (context, error, staticIconProvider) => Image.asset('assets/images/not_available.jpg', fit: BoxFit.cover),
+      );
     }
     final serverUrl = ApiConstants.baseUrl.replaceAll('/api', '');
     final fullUrl = '$serverUrl/storage/$imagePath';
@@ -281,7 +290,11 @@ class _AdminHomeTabState extends State<AdminHomeTab> {
                       Text('\$${product['price']}', style: const TextStyle(fontSize: 16, color: AppTheme.navyBlue, fontWeight: FontWeight.w900)),
                       GestureDetector(
                         onTap: () {
-                          // PRÓXIMAMENTE: Pantalla de Edición
+                          //Navegar a la pantalla de editar
+                          Navigator.push(context, MaterialPageRoute(builder: (context) => EditProductScreen(productId: product['product_id']),
+                          ),
+                          );
+                          _loadData();
                         },
                         child: Column(
                           children: [

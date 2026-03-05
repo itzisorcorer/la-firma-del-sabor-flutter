@@ -100,4 +100,53 @@ class ProductService {
       return false;
     }
   }
+  //funcion para actualizar un producto (administrador)
+Future<bool> updateProducts({
+    required int productId,
+    required Map<String, dynamic> productData,
+    required List<XFile> newImages,
+    required List<String> newVideos,
+}) async{
+    final token = await AuthService().getToken();
+    final url = Uri.parse('${ApiConstants.baseUrl}/products/$productId?_method=PUT');
+
+    try{
+      var request = http.MultipartRequest('POST', url);
+      request.headers['Authorization'] = 'Bearer $token';
+      request.headers['Accept'] = 'application/json';
+
+      //campos de texto a insertar
+      productData.forEach((key, value){
+        if(value != null && value.toString().isNotEmpty){
+          request.fields[key] = value.toString();
+        }
+      });
+
+      //insertar videos nuevos (si hay)
+      for(int i = 0; i < newVideos.length; i++){
+        request.files.add(await http.MultipartFile.fromPath('images[]', newImages[i].path)
+        );
+      }
+      //insertar las nuevas fotos
+      for(int i =0; i < newImages.length; i++){
+        request.files.add(await http.MultipartFile.fromPath('images[]', newImages[i].path)
+        );
+      }
+
+      var streamedResponse = await request.send();
+      var response = await http.Response.fromStream(streamedResponse);
+      if(response.statusCode == 200){
+        return true;
+      }else{
+        print('rechazado por laravel: ${response.statusCode}');
+        print('detalles: ${response.body}');
+        return false;
+      }
+
+    }catch(e){
+      print('error de conexión: $e');
+      return false;
+
+    }
+}
 }

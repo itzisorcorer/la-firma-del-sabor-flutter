@@ -59,7 +59,7 @@ Future<bool> toggleFavorite(int productId) async{
   }
   }
 
-  //funcion para ovtener producto por categoria
+  //funcion para obtener producto por categoria
 Future <List<dynamic>> fetchProductsByCategory(int categoryId) async{
   final token = await _authService.getToken();
   final url = Uri.parse('${ApiConstants.baseUrl}/categories/$categoryId/products');

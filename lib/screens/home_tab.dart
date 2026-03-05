@@ -109,6 +109,26 @@ class _HomeTabState extends State<HomeTab> {
     setState(() => _isFiltering = false);
 
   }
+  // Función para leer las fotos de Laravel o de Internet
+  Widget _buildProductImage(String? imagePath) {
+    if (imagePath == null || imagePath.isEmpty) {
+      return Image.asset('assets/images/not_available.jpg', fit: BoxFit.cover);
+    }
+    if (imagePath.startsWith('http')) {
+      return Image.network(
+        imagePath,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => Image.asset('assets/images/not_available.jpg', fit: BoxFit.cover),
+      );
+    }
+    final serverUrl = ApiConstants.baseUrl.replaceAll('/api', '');
+    final fullUrl = '$serverUrl/storage/$imagePath';
+    return Image.network(
+      fullUrl,
+      fit: BoxFit.cover,
+      errorBuilder: (context, error, stackTrace) => Image.asset('assets/images/not_available.jpg', fit: BoxFit.cover),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -364,12 +384,10 @@ class _HomeTabState extends State<HomeTab> {
                   topLeft: Radius.circular(20),
                   topRight: Radius.circular(20),
                 ),
-                child: Image.network(
-                  // Bypass temporal
-                  'https://media.airedesantafe.com.ar/p/9ac096426bd44b6fe19d566ec41b5083/adjuntos/268/imagenes/003/771/0003771857/1200x0/smart/imagepng.png',
+                child: SizedBox(
                   height: 120,
                   width: double.infinity,
-                  fit: BoxFit.cover,
+                  child: _buildProductImage(product['image_url']),
                 ),
               ),
 
