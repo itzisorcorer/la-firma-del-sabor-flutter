@@ -51,4 +51,56 @@ class AdminService {
       return false;
     }
   }
+  //traer todos los productos para el admin
+  Future<List<dynamic>> fetchAdminProducts() async{
+    final token = await AuthService().getToken();
+    final url = Uri.parse('${ApiConstants.baseUrl}/admin/products');
+
+    try{
+      final response = await http.get(url,
+      headers: {
+        'Accept' : 'application/json',
+        'Authorization' : 'Bearer $token',
+      },
+      );
+      if(response.statusCode == 200){
+        final data = jsonDecode(response.body);
+        return data['data'] ?? [];
+      }else{
+        print('Error del laravel: ${response.statusCode}');
+        print('detalles de error: ${response.body}');
+        return [];
+      }
+    }catch(e){
+      print('Error de conexión: $e');
+      return [];
+
+    }
+  }
+  //traer las categorías para el buscador del admin
+Future<List<dynamic>> fetchCategories()async{
+    final token = await AuthService().getToken();
+    final url = Uri.parse('${ApiConstants.baseUrl}/categories-data');
+
+    try{
+      final response = await http.get(url,
+      headers: {
+        'Accept' : 'application/json',
+        'Authorization' : 'Bearer $token',
+      },
+      );
+      if(response.statusCode == 200){
+        final data = jsonDecode(response.body);
+        return data['data']['categories'] ?? [];
+      }
+      return [];
+
+
+    }catch(e){
+      print('error al traer las categorias: $e');
+      return [];
+
+    }
+}
+
 }
