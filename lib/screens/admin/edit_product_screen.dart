@@ -45,6 +45,9 @@ class _EditProductScreenState extends State<EditProductScreen> {
   // Archivos existentes y nuevos
   List<dynamic> _existingImages = [];
   List<dynamic> _existingVideos = [];
+  List<String> _deletedImages = [];
+  List<String> _deletedVideos = [];
+
   final ImagePicker _picker = ImagePicker();
   List<XFile> _selectedImages = [];
   List<TextEditingController> _videoControllers = [];
@@ -179,7 +182,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
 
-              // --- IMÁGENES ACTUALES (Solo lectura por ahora) ---
+              // --- IMÁGENES ACTUALES ---
               if (_existingImages.isNotEmpty) ...[
                 const Text('Imágenes actuales', style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.navyBlue, fontSize: 16)),
                 const SizedBox(height: 10),
@@ -190,12 +193,33 @@ class _EditProductScreenState extends State<EditProductScreen> {
                     itemCount: _existingImages.length,
                     itemBuilder: (context, index) {
                       final img = _existingImages[index];
-                      return Container(
-                        width: 100, margin: const EdgeInsets.only(right: 15),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(15),
-                          image: DecorationImage(image: NetworkImage(_getImageUrl(img['image_url'])), fit: BoxFit.cover),
-                        ),
+                      return Stack(
+                        children: [
+                          Container(
+                            width: 100, margin: const EdgeInsets.only(right: 15),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(15),
+                              image: DecorationImage(image: NetworkImage(_getImageUrl(img['image_url'])
+                              ),
+                              fit: BoxFit.cover
+                              ),
+                            ),
+
+                          ),
+                          //----------Boton de eliminar foto
+                          Positioned(
+                            top: 5, right: 20,
+                            child: GestureDetector(
+                              onTap: (){
+                                setState(() {
+                                  _deletedImages.add(img['image_url']);
+                                  _existingImages.removeAt(index);
+                                });
+                              },
+                              child: const CircleAvatar(radius: 12, backgroundColor: Colors.red, child: Icon(Icons.close, size: 15, color: Colors.white)),
+                            ),
+                          ),
+                        ],
                       );
                     },
                   ),
@@ -292,7 +316,30 @@ class _EditProductScreenState extends State<EditProductScreen> {
               if (_existingVideos.isNotEmpty) ...[
                 const Text('Videos actuales', style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.navyBlue, fontSize: 16)),
                 const SizedBox(height: 5),
-                ..._existingVideos.map((v) => Padding(padding: const EdgeInsets.only(bottom: 5), child: Row(children: [const Icon(Icons.check_circle, color: Colors.green, size: 16), const SizedBox(width: 8), Expanded(child: Text(v['url_youtube'], style: const TextStyle(color: Colors.grey), overflow: TextOverflow.ellipsis))]))).toList(),
+                ..._existingVideos.asMap().entries.map((entry) {
+                  int idx = entry.key;
+                  var v = entry.value;
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 5),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.ondemand_video, color: AppTheme.navyBlue, size: 20),
+                        const SizedBox(width: 8),
+                        Expanded(child: Text(v['url_youtube'], style: const TextStyle(color: Colors.grey), overflow: TextOverflow.ellipsis)),
+                        // ------------Botón de eliminar video actual----------------
+                        IconButton(
+                          icon: const Icon(Icons.delete_outline, color: Colors.red),
+                          onPressed: () {
+                            setState(() {
+                              _deletedVideos.add(v['url_youtube']); // Se va a la lista negra
+                              _existingVideos.removeAt(idx);        // Desaparece de la vista
+                            });
+                          },
+                        )
+                      ],
+                    ),
+                  );
+                }),
                 const SizedBox(height: 15),
               ],
 
@@ -326,6 +373,8 @@ class _EditProductScreenState extends State<EditProductScreen> {
                         productData: dataToSend,
                         newImages: _selectedImages,
                         newVideos: videosToSave,
+                        deletedVideos: _deletedVideos,
+                        deletedImages: _deletedImages,
                       );
 
                       setState(() => _isSaving = false);

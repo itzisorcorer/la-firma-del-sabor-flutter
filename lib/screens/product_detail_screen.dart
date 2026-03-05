@@ -146,7 +146,16 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     },
                     itemBuilder: (context, index) {
                       final String currentImageUrl = productImages[index]['image_url'];
-                      return _buildProductImage(currentImageUrl);
+                      return GestureDetector(
+                        onTap: () {
+                          //al tocar una foto, se abre toda
+                          Navigator.push(context, MaterialPageRoute(builder: (context) => FullScreenGallery(images: productImages, initialIndex: index),
+                          ),
+                      );
+                        },
+                        child: _buildProductImage(currentImageUrl),
+                      );
+
                     },
                   ),
                   // Indicadores de posición (los puntitos)
@@ -552,6 +561,91 @@ class _VideoPlayerItemState extends State<VideoPlayerItem> {
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+// --- WIDGET VISOR DE IMÁGENES EN PANTALLA COMPLETA ---
+class FullScreenGallery extends StatefulWidget {
+  final List<dynamic> images;
+  final int initialIndex;
+
+  const FullScreenGallery({
+    super.key,
+    required this.images,
+    required this.initialIndex,
+  });
+
+  @override
+  State<FullScreenGallery> createState() => _FullScreenGalleryState();
+}
+
+class _FullScreenGalleryState extends State<FullScreenGallery> {
+  late PageController _pageController;
+  late int _currentIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = widget.initialIndex;
+    _pageController = PageController(initialPage: widget.initialIndex);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  // Reciclamos tu función de leer fotos
+  Widget _buildFullScreenImage(String? imagePath) {
+    if (imagePath == null || imagePath.isEmpty) {
+      return Image.asset('assets/images/not_available.jpg', fit: BoxFit.contain);
+    }
+    if (imagePath.startsWith('http')) {
+      return Image.network(imagePath, fit: BoxFit.contain);
+    }
+    final serverUrl = ApiConstants.baseUrl.replaceAll('/api', '');
+    final fullUrl = '$serverUrl/storage/$imagePath';
+    return Image.network(fullUrl, fit: BoxFit.contain);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black, // Fondo negro estilo galería
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
+        // Mostramos en qué foto vamos (Ej: 1 / 3)
+        title: Text(
+          '${_currentIndex + 1} / ${widget.images.length}',
+          style: const TextStyle(color: Colors.white, fontSize: 16),
+        ),
+        centerTitle: true,
+      ),
+      body: PageView.builder(
+        controller: _pageController,
+        itemCount: widget.images.length,
+        onPageChanged: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+        itemBuilder: (context, index) {
+          final String imageUrl = widget.images[index]['image_url'];
+
+          // 👇 LA MAGIA DEL ZOOM: InteractiveViewer
+          return InteractiveViewer(
+            panEnabled: true, // Permite mover la foto cuando hay zoom
+            minScale: 1.0,    // Tamaño normal
+            maxScale: 4.0,    // Hasta 4x de zoom
+            child: Center(
+              child: _buildFullScreenImage(imageUrl),
+            ),
+          );
+        },
       ),
     );
   }

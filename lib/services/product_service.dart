@@ -106,6 +106,8 @@ Future<bool> updateProducts({
     required Map<String, dynamic> productData,
     required List<XFile> newImages,
     required List<String> newVideos,
+    required List<String> deletedVideos,
+    required List<String> deletedImages,
 }) async{
     final token = await AuthService().getToken();
     final url = Uri.parse('${ApiConstants.baseUrl}/products/$productId?_method=PUT');
@@ -131,6 +133,14 @@ Future<bool> updateProducts({
       for(int i =0; i < newImages.length; i++){
         request.files.add(await http.MultipartFile.fromPath('images[]', newImages[i].path)
         );
+      }
+      //empaquetar en las listas las imagenes a eliminar
+      for(int i = 0; i < deletedImages.length; i++){
+        request.fields['deleted_images[$i]'] = deletedImages[i];
+      }
+      //empaquetar videos a eliminar
+      for(int i =0; i< deletedVideos.length; i++){
+        request.fields['deleted_videos[$i]'] = deletedVideos[i];
       }
 
       var streamedResponse = await request.send();
