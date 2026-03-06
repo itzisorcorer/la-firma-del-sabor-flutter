@@ -3,7 +3,9 @@ import 'package:app_firma_sabor/constants/app_theme.dart';
 import 'package:app_firma_sabor/services/auth_service.dart';
 import 'package:app_firma_sabor/screens/login_screen.dart';
 import 'package:app_firma_sabor/screens/admin/admin_home_tab.dart'; // La crearemos ahorita
-import 'package:app_firma_sabor/screens/admin/admin_orders_tab.dart'; // Esta la haremos en el paso 3
+import 'package:app_firma_sabor/screens/admin/admin_orders_tab.dart';
+
+import 'create_creator_screen.dart'; // Esta la haremos en el paso 3
 
 class AdminMainScreen extends StatefulWidget {
   const AdminMainScreen({super.key});
@@ -53,6 +55,9 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
                     child: Center(child: Image.asset('assets/images/logo_firma.png', height: 100)),
                   ),
                   const SizedBox(height: 10),
+                  ListTile(leading: const Icon(Icons.supervised_user_circle_outlined, color: AppTheme.navyBlue), title: const Text('Crear Artesano', style: TextStyle(color: AppTheme.navyBlue, fontWeight: FontWeight.bold)), onTap: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => const CreateCreatorScreen()));
+                  }),
                   ListTile(leading: const Icon(Icons.info_outline, color: AppTheme.navyBlue), title: const Text('Acerca de', style: TextStyle(color: AppTheme.navyBlue, fontWeight: FontWeight.bold)), onTap: () {}),
                 ],
               ),

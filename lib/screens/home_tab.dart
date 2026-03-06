@@ -19,6 +19,7 @@ class _HomeTabState extends State<HomeTab> {
   List<dynamic> _categories = [];
   List<dynamic> _recentProducts = [];
   List<dynamic> _recentlyViewed = [];
+  List<dynamic> _allProducts = [];
 
   int? _selectedCategoryId;
   bool _isFiltering = false;
@@ -55,6 +56,7 @@ class _HomeTabState extends State<HomeTab> {
         _categories = data['categories'] ?? [];
         _recentProducts = data['recent_products'] ?? [];
         _recentlyViewed = data['recently_viewed'] ?? [];
+        _allProducts = data['all_products'] ?? [];
         _isLoading = false;
       });
     } else {
@@ -293,6 +295,38 @@ class _HomeTabState extends State<HomeTab> {
             ],
           ],
             const SizedBox(height: 30),
+            // --- 5. SECCIÓN: TODOS LOS PRODUCTOS (Cuadrícula Vertical) ---
+            if (_allProducts.isNotEmpty) ...[
+              _buildSectionHeader('Descubre más'),
+              const SizedBox(height: 15),
+              GridView.builder(
+                physics: const NeverScrollableScrollPhysics(),
+                shrinkWrap: true,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2, // 2 productos por fila
+                  crossAxisSpacing: 15,
+                  mainAxisSpacing: 15,
+                  childAspectRatio: 0.70,
+                ),
+                itemCount: _allProducts.length,
+                itemBuilder: (context, index) {
+                  final product = _allProducts[index];
+
+                  return LayoutBuilder(
+                      builder: (context, constraints) {
+                        return SizedBox(
+                          width: constraints.maxWidth,
+                          child: _buildProductCard(
+                            product: product,
+                            onFavoriteTap: () => _toggleFavoriteStatus(product['product_id'], _allProducts, index),
+                          ),
+                        );
+                      }
+                  );
+                },
+              ),
+            ],
+            const SizedBox(height: 40),
 
         ],
         ),

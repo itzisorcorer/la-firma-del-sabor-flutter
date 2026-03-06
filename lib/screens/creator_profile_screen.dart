@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:app_firma_sabor/constants/app_theme.dart';
 import 'package:app_firma_sabor/services/creator_service.dart';
 import 'package:app_firma_sabor/screens/product_detail_screen.dart';
+import 'package:app_firma_sabor/constants/api_constants.dart'; // 👈 IMPORTANTE: Agregamos las constantes
+import 'package:cached_network_image/cached_network_image.dart';
 
 class CreatorProfileScreen extends StatefulWidget {
   final int creatorId;
@@ -38,9 +40,19 @@ class _CreatorProfileScreenState extends State<CreatorProfileScreen> {
     }
   }
 
+  // 👇 NUEVO: Función inteligente para traducir rutas a URLs completas
+  String _getFullImageUrl(String? path) {
+    if (path == null || path.isEmpty) {
+      return 'https://images.unsplash.com/photo-1550258987-190a2d41a8ba?q=80&w=400&auto=format&fit=crop';
+    }
+    if (path.startsWith('http')) return path;
+
+    final serverUrl = ApiConstants.baseUrl.replaceAll('/api', '');
+    return '$serverUrl/storage/$path';
+  }
+
   @override
   Widget build(BuildContext context) {
-    // 1. PANTALLA DE CARGA
     if (_isLoading) {
       return const Scaffold(
         backgroundColor: AppTheme.backgroundLight,
@@ -48,7 +60,6 @@ class _CreatorProfileScreenState extends State<CreatorProfileScreen> {
       );
     }
 
-    // 2. ERROR SI NO LLEGAN DATOS
     if (_creatorData == null) {
       return Scaffold(
         backgroundColor: AppTheme.backgroundLight,
@@ -57,19 +68,18 @@ class _CreatorProfileScreenState extends State<CreatorProfileScreen> {
       );
     }
 
-    // 3. LA PANTALLA REAL CON DATOS DE LA BD
     return Scaffold(
       backgroundColor: const Color(0xFFE1AEA2),
       body: SingleChildScrollView(
         child: Stack(
           children: [
-            // IMAGEN DE FONDO
+            // IMAGEN DE FONDO (Corregida)
             Container(
               height: 300,
               width: double.infinity,
               decoration: BoxDecoration(
                 image: DecorationImage(
-                  image: NetworkImage(_creatorData!['background_image']),
+                  image: CachedNetworkImageProvider(_getFullImageUrl(_creatorData!['background_image'])),
                   fit: BoxFit.cover,
                 ),
               ),
@@ -185,7 +195,7 @@ class _CreatorProfileScreenState extends State<CreatorProfileScreen> {
                 ],
               ),
             ),
-            // FOTO DE PERFIL (SUPERPUESTA)
+            // FOTO DE PERFIL (SUPERPUESTA) (Corregida)
             Positioned(
               top: 180,
               left: 0,
@@ -199,7 +209,7 @@ class _CreatorProfileScreenState extends State<CreatorProfileScreen> {
                   ),
                   child: CircleAvatar(
                     radius: 60,
-                    backgroundImage: NetworkImage(_creatorData!['profile_image']),
+                    backgroundImage: CachedNetworkImageProvider(_getFullImageUrl(_creatorData!['profile_image'])),
                   ),
                 ),
               ),
@@ -218,7 +228,8 @@ class _CreatorProfileScreenState extends State<CreatorProfileScreen> {
   }
 
   Widget _buildMiniProductCard(Map<String, dynamic> product) {
-    final String imageUrl = product['image'] ?? 'https://images.unsplash.com/photo-1550258987-190a2d41a8ba?q=80&w=400&auto=format&fit=crop';
+    // 👇 Corregimos también la imagen de los productos para usar el traductor
+    final String imageUrl = _getFullImageUrl(product['main_image_url'] ?? product['image']);
     final String name = product['name'] ?? 'Producto sin nombre';
     final String description = product['description'] ?? 'Sin descripción disponible.';
     final String price = product['price']?.toString() ?? '0.00';
@@ -226,7 +237,6 @@ class _CreatorProfileScreenState extends State<CreatorProfileScreen> {
 
     return GestureDetector(
       onTap: () {
-        // Viajamos al detalle de este producto en específico
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -237,7 +247,7 @@ class _CreatorProfileScreenState extends State<CreatorProfileScreen> {
       child: Container(
         width: 160,
         decoration: BoxDecoration(
-          color: Colors.white, //color huesito
+          color: Colors.white,
           borderRadius: BorderRadius.circular(20),
           boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 5))],
         ),
@@ -247,7 +257,7 @@ class _CreatorProfileScreenState extends State<CreatorProfileScreen> {
             ClipRRect(
               borderRadius: const BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20)),
               child: Image.network(
-                imageUrl,
+                imageUrl, // 👈 Ahora ya es una URL real y completa
                 height: 100,
                 width: double.infinity,
                 fit: BoxFit.cover,
@@ -271,7 +281,6 @@ class _CreatorProfileScreenState extends State<CreatorProfileScreen> {
                       Text('\$$price c/u', style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.navyBlue, fontSize: 12)),
                       GestureDetector(
                         onTap: () {
-                          // Aquí irá tu lógica de agregar a favoritos después
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(content: Text('$name guardado en favoritos'), duration: const Duration(seconds: 1)),
                           );

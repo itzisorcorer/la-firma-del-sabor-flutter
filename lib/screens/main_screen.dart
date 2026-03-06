@@ -9,6 +9,8 @@ import 'package:app_firma_sabor/screens/orders_tab.dart';
 import 'package:app_firma_sabor/services/auth_service.dart';
 import 'package:app_firma_sabor/screens/login_screen.dart';
 
+import 'favorites_screen.dart';
+
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
 
@@ -63,7 +65,7 @@ class _MainScreenState extends State<MainScreen> {
         ],
       ),
 
-      // 👇 AQUÍ AGREGAMOS NUESTRO MENÚ LATERAL (DRAWER)
+      // AQUI EL MENU HAMBURGUESA
       drawer: Drawer(
         backgroundColor: const Color(0xFFF9F5F0), // Fondo crema
         child: Column(
@@ -101,6 +103,16 @@ class _MainScreenState extends State<MainScreen> {
                     leading: const Icon(Icons.accessibility_new, color: AppTheme.navyBlue),
                     title: const Text('Soporte y Accesibilidad', style: TextStyle(color: AppTheme.navyBlue, fontWeight: FontWeight.bold)),
                     onTap: () {},
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.favorite, color: AppTheme.navyBlue),
+                    title: const Text('Favoritos', style: TextStyle(color: AppTheme.navyBlue, fontWeight: FontWeight.bold)),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const FavoritesScreen()),
+                      );
+                    },
                   ),
                 ],
               ),

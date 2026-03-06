@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:app_firma_sabor/services/auth_service.dart';
 import 'package:app_firma_sabor/constants/api_constants.dart';
@@ -102,5 +103,50 @@ Future<List<dynamic>> fetchCategories()async{
 
     }
 }
+Future <bool> createCreator({
+    required String name,
+  required String biography,
+  required String location,
+  required File photo,
+  required File coverPhoto,
+  File? cvFile,
 
+})async{
+    final token = await AuthService().getToken();
+    final url = Uri.parse('${ApiConstants.baseUrl}/admin/creators');
+
+    try{
+      var request = http.MultipartRequest('POST', url);
+      request.headers['Authorization'] = 'Bearer $token';
+      request.headers['Accept'] = 'Application/json';
+      
+      //campos de texto
+      request.fields['name'] = name;
+      request.fields['biography'] = biography;
+      request.fields['location'] = location;
+      
+      //imagenes
+      request.files.add(await http.MultipartFile.fromPath('photo', photo.path));
+      request.files.add(await http.MultipartFile.fromPath('cover_photo', coverPhoto.path));
+      
+      //pdf
+      if(cvFile != null){
+        request.files.add(await http.MultipartFile.fromPath('cv_file', cvFile.path));
+      }
+      
+      var streamedResponse = await request.send();
+      var response = await http.Response.fromStream(streamedResponse);
+
+      if(response.statusCode == 200 || response.statusCode == 201){
+        return true;
+
+      }else{
+        print('Error en Laravel al crear creator: ${response.body}');
+        return false;
+      }
+    }catch(e){
+      print('Error al crear el creador: $e');
+      return false;
+    }
+  }
 }

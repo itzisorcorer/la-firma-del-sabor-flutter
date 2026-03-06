@@ -80,4 +80,25 @@ Future <List<dynamic>> fetchProductsByCategory(int categoryId) async{
   }
 
   }
+  // Función para traer todos los favoritos del usuario
+  Future<List<dynamic>> fetchFavorites() async {
+    final token = await _authService.getToken();
+    final url = Uri.parse('${ApiConstants.baseUrl}/favorites');
+
+    try {
+      final response = await http.get(url, headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      });
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['data'] ?? [];
+      }
+      return [];
+    } catch (e) {
+      print('Error al cargar favoritos: $e');
+      return [];
+    }
+  }
+
 }
