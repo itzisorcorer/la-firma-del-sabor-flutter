@@ -126,6 +126,7 @@ class _OrdersTabState extends State<OrdersTab> {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(content: Text('Gracias por su opinión!'), backgroundColor: Colors.green),
                           );
+                          _loadOrders();
                         }else{
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(content: Text('Hubo un error al enviar su opinión'),
@@ -237,30 +238,20 @@ class _OrdersTabState extends State<OrdersTab> {
                             padding: const EdgeInsets.only(right: 20, bottom: 10),
                             child: Align(
                               alignment: Alignment.centerRight,
-                              child: TextButton.icon(
+                              // Preguntamos si ya opinó
+                              child: item['has_reviewed'] == true
+                                  ? const Text("Ya opinaste sobre este producto",
+                                  style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic, fontSize: 13))
+                                  : TextButton.icon(
                                 onPressed: () {
-
                                   final rawId = item['product_id'] ?? item['id'];
-
-                                  if (rawId == null) {
-
-                                    print('No se encontró el ID del producto.');
-                                    print('Datos que llegaron de Laravel: $item');
-
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('Error: Faltan datos del producto en la orden.'), backgroundColor: Colors.red),
-                                    );
-                                    return;
-                                  }
-
-
+                                  if (rawId == null) return;
                                   final int productId = int.tryParse(rawId.toString()) ?? 0;
-
-
                                   _showReviewModal(context, productId, item['name'] ?? 'Producto');
                                 },
                                 icon: const Icon(Icons.star_outline, color: AppTheme.orangeBrand, size: 18),
-                                label: const Text("Opinar sobre este producto", style: TextStyle(color: AppTheme.orangeBrand, fontWeight: FontWeight.bold, fontSize: 13)),
+                                label: const Text("Opinar sobre este producto",
+                                    style: TextStyle(color: AppTheme.orangeBrand, fontWeight: FontWeight.bold, fontSize: 13)),
                               ),
                             ),
                           ),
