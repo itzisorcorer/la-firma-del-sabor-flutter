@@ -159,4 +159,36 @@ Future<bool> updateProducts({
 
     }
 }
+// Enviar una opinión (Review)
+  Future<bool> submitReview(int productId, int rating, String comment) async {
+    try {
+      final token = await AuthService().getToken();
+      final url = Uri.parse('${ApiConstants.baseUrl}/reviews');
+
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'product_id': productId,
+          'rating': rating,
+          'comment': comment,
+        }),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return true;
+      } else {
+        print('Error al enviar reseña: ${response.statusCode}');
+        print('Motivo: ${response.body}');
+        return false;
+      }
+    } catch (e) {
+      print('Excepción al enviar reseña: $e');
+      return false;
+    }
+  }
 }

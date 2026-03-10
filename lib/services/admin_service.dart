@@ -149,4 +149,56 @@ Future <bool> createCreator({
       return false;
     }
   }
+  //Actualizar a un artesano o creador
+Future<bool> updateCreator({
+    required int id,
+    required String name,
+    required String biography,
+    required String location,
+    File? photo,
+    File? coverPhoto,
+    File? cvFile,
+})async{
+    final token = await AuthService().getToken();
+    final url = Uri.parse('${ApiConstants.baseUrl}/admin/creators/$id');
+
+    try{
+      var request = http.MultipartRequest('POST', url);
+      request.headers['Authorization'] = 'Bearer $token';
+      request.headers['Accept'] = 'Application/json';
+
+      request.fields['name'] = name;
+      request.fields['biography'] = biography;
+      request.fields['location'] = location;
+
+
+      //validacion de fotos y pdf's
+      if(photo != null){
+        request.files.add(await http.MultipartFile.fromPath('photo', photo.path));
+      }
+      if(coverPhoto != null){
+        request.files.add(await http.MultipartFile.fromPath('cover_photo', coverPhoto.path));
+      }
+      if(cvFile != null){
+        request.files.add(await http.MultipartFile.fromPath('cv_file', cvFile.path));
+      }
+
+      var streamedResponse = await request.send();
+      var response = await http.Response.fromStream(streamedResponse);
+
+      if(response.statusCode == 200 || response.statusCode==201){
+        return true;
+      }else{
+        print('Error al actualizar creator: ${response.statusCode}');
+        print('Motivo: ${response.body}');
+        return false;
+      }
+    }catch(e){
+      print('Error al actualizar: $e');
+      return false;
+
+    }
+
+
+}
 }

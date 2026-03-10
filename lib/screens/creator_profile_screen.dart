@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:app_firma_sabor/constants/app_theme.dart';
 import 'package:app_firma_sabor/services/creator_service.dart';
 import 'package:app_firma_sabor/screens/product_detail_screen.dart';
-import 'package:app_firma_sabor/constants/api_constants.dart'; // 👈 IMPORTANTE: Agregamos las constantes
+import 'package:app_firma_sabor/constants/api_constants.dart';
+import 'package:app_firma_sabor/screens/pdf_viewer_screen.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 class CreatorProfileScreen extends StatefulWidget {
@@ -188,14 +189,27 @@ class _CreatorProfileScreenState extends State<CreatorProfileScreen> {
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                         elevation: 0,
                       ),
-                      onPressed: () {},
+                      onPressed: () {
+                        final cvPath = _creatorData!['cv_url'];
+                        if(cvPath != null && cvPath.toString().isNotEmpty){
+                          final fullPfUrl = _getFullImageUrl(cvPath);
+                          Navigator.push(context, MaterialPageRoute(builder: (context) => PdfViewerScreen(pdfUrl: fullPfUrl, creatorName: _creatorData!['name'])
+                          ),
+                          );
+                        }else{
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Este artesano aun no tiene su biografia en PDF...'), backgroundColor: AppTheme.navyBlue),
+                          );
+                        }
+
+                      },
                       child: const Text("Conoce su biografía", style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)),
                     ),
                   ),
                 ],
               ),
             ),
-            // FOTO DE PERFIL (SUPERPUESTA) (Corregida)
+            // FOTO DE PERFIL
             Positioned(
               top: 180,
               left: 0,
@@ -228,7 +242,7 @@ class _CreatorProfileScreenState extends State<CreatorProfileScreen> {
   }
 
   Widget _buildMiniProductCard(Map<String, dynamic> product) {
-    // 👇 Corregimos también la imagen de los productos para usar el traductor
+
     final String imageUrl = _getFullImageUrl(product['main_image_url'] ?? product['image']);
     final String name = product['name'] ?? 'Producto sin nombre';
     final String description = product['description'] ?? 'Sin descripción disponible.';
@@ -257,7 +271,7 @@ class _CreatorProfileScreenState extends State<CreatorProfileScreen> {
             ClipRRect(
               borderRadius: const BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20)),
               child: Image.network(
-                imageUrl, // 👈 Ahora ya es una URL real y completa
+                imageUrl,
                 height: 100,
                 width: double.infinity,
                 fit: BoxFit.cover,

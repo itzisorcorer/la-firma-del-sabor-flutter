@@ -107,7 +107,10 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
   }
 
   Future<void> _pickImages() async {
-    final List<XFile> images = await _picker.pickMultiImage();
+    final List<XFile> images = await _picker.pickMultiImage(
+      imageQuality: 50,
+      maxWidth: 1200,
+    );
     if (images.isNotEmpty) {
       setState(() {
         _selectedImages.addAll(images);
